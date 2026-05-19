@@ -14,6 +14,10 @@ results/*.npz
 results/*.npy
 results/**/*.npz
 results/**/*.npy
+# Trained model checkpoints in results/ — regeneratable from caches
+results/**/*.pt
+results/**/*.bin
+results/**/*.safetensors
 
 # Local-only
 .env
