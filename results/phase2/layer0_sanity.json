@@ -1,0 +1,26 @@
+{
+  "layer_00_input_cls": {
+    "shape": [
+      2638,
+      512
+    ],
+    "mean_abs_value": 0.5210487842559814,
+    "std_per_dim_mean": 8.650181371194776e-06,
+    "std_per_dim_median": 4.894523499388015e-06,
+    "std_per_dim_max": 0.00022422308393288404,
+    "max_abs_deviation_from_mean": 0.000225067138671875
+  },
+  "layer_05_cls_reference": {
+    "shape": [
+      2638,
+      512
+    ],
+    "mean_abs_value": 0.7244665622711182,
+    "std_per_dim_mean": 0.03748297318816185,
+    "std_per_dim_median": 0.03561253473162651,
+    "std_per_dim_max": 0.08545853942632675,
+    "max_abs_deviation_from_mean": 0.5450353622436523
+  },
+  "ratio_l0_to_ref_std": 0.00023077629157342017,
+  "interpretation_note": "ratio_l0_to_ref_std reports how much per-dim std the CLS slot has at layer 0 relative to a mid-layer CLS. If << 1, layer 0 CLS is near-constant across cells and the phase1 layer-0 baseline is degenerate. Numbers, not verdicts \u2014 judge in context."
+}
