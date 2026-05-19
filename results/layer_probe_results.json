@@ -1,0 +1,107 @@
+{
+  "label_col": "louvain",
+  "classes": [
+    "B cells",
+    "CD14+ Monocytes",
+    "CD4 T cells",
+    "CD8 T cells",
+    "Dendritic cells",
+    "FCGR3A+ Monocytes",
+    "Megakaryocytes",
+    "NK cells"
+  ],
+  "n_cells": 2638,
+  "per_layer": [
+    {
+      "accuracy": 0.4337121212121212,
+      "macro_f1": 0.07562747688243064,
+      "n_train": 2110,
+      "n_test": 528,
+      "layer": "layer_00_input"
+    },
+    {
+      "accuracy": 0.8901515151515151,
+      "macro_f1": 0.8465127853297876,
+      "n_train": 2110,
+      "n_test": 528,
+      "layer": "layer_01"
+    },
+    {
+      "accuracy": 0.9071969696969697,
+      "macro_f1": 0.8728228668832285,
+      "n_train": 2110,
+      "n_test": 528,
+      "layer": "layer_02"
+    },
+    {
+      "accuracy": 0.9090909090909091,
+      "macro_f1": 0.8731134317775708,
+      "n_train": 2110,
+      "n_test": 528,
+      "layer": "layer_03"
+    },
+    {
+      "accuracy": 0.9147727272727273,
+      "macro_f1": 0.8828749983626993,
+      "n_train": 2110,
+      "n_test": 528,
+      "layer": "layer_04"
+    },
+    {
+      "accuracy": 0.9204545454545454,
+      "macro_f1": 0.8893035837748462,
+      "n_train": 2110,
+      "n_test": 528,
+      "layer": "layer_05"
+    },
+    {
+      "accuracy": 0.9185606060606061,
+      "macro_f1": 0.885736230280652,
+      "n_train": 2110,
+      "n_test": 528,
+      "layer": "layer_06"
+    },
+    {
+      "accuracy": 0.9128787878787878,
+      "macro_f1": 0.8775912092053442,
+      "n_train": 2110,
+      "n_test": 528,
+      "layer": "layer_07"
+    },
+    {
+      "accuracy": 0.9090909090909091,
+      "macro_f1": 0.8760717941981525,
+      "n_train": 2110,
+      "n_test": 528,
+      "layer": "layer_08"
+    },
+    {
+      "accuracy": 0.9015151515151515,
+      "macro_f1": 0.8646889460892602,
+      "n_train": 2110,
+      "n_test": 528,
+      "layer": "layer_09"
+    },
+    {
+      "accuracy": 0.8939393939393939,
+      "macro_f1": 0.8587366392890725,
+      "n_train": 2110,
+      "n_test": 528,
+      "layer": "layer_10"
+    },
+    {
+      "accuracy": 0.8939393939393939,
+      "macro_f1": 0.8571028143551904,
+      "n_train": 2110,
+      "n_test": 528,
+      "layer": "layer_11"
+    },
+    {
+      "accuracy": 0.875,
+      "macro_f1": 0.7751013615691722,
+      "n_train": 2110,
+      "n_test": 528,
+      "layer": "layer_12"
+    }
+  ]
+}

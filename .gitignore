@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Model weights & datasets — large binaries, do not version
+checkpoints/
+data/
+
+# Large NPZ caches (embeddings) — regeneratable
+results/*.npz
+results/*.npy
+
+# Local-only
+.env
+.venv/
+*.log
+.DS_Store

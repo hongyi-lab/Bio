@@ -1,0 +1,14 @@
+{
+  "n_cells": 50,
+  "n_genes_in_vocab": 12300,
+  "cell_emb_dim": 512,
+  "per_gene_last_batch_shape": [
+    2,
+    619,
+    512
+  ],
+  "color_col": "louvain",
+  "device": "cuda",
+  "model_embsize": 512,
+  "model_nlayers": 12
+}
