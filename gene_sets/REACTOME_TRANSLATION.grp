@@ -1,0 +1,112 @@
+
+
+
+  
+
+
+
+
+
+<!-- Copyright (c) 2013-2021 Broad Institute, Inc., Massachusetts Institute of Technology, and Regents of the University of California.  All rights reserved. -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <base href="/gsea/" />
+    
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+    <meta name="verify-v1" content="/23Jlayki9tnRqU7DcCYrbFI7zPmHJ3HfeZltM6mK5Q=" />
+    <title>GSEA | MSigDB | Gene Set Not Found</title>
+    <link href='css/style.css' rel="stylesheet" type="text/css" />
+    <link href="images/icon_32x32.png" rel="icon" />
+</head>
+<body>
+  <div id="logo"><a href="index.jsp" target="_parent"><img src="images/GSEA-logo.gif" border="0" /></a></div>
+  <div id="wrapper">
+    <div id="breadcrumbs">
+      
+      
+      <a href="login.jsp" target="_parent">login</a><br/><a href="register.jsp" target="_parent">register</a>
+    </div>
+    <div id="search"> </div>
+    <div id="topnavs"> <!-- top horizontal nav bar -->
+      <ul>
+        <li><a href="index.jsp" rel="nofollow"  target="_parent">GSEA Home</a></li>
+        <li><a href="downloads.jsp" rel="nofollow"  target="_parent">Downloads</a></li>
+        <li><a href="msigdb/index.jsp" class="on" target="_parent">Molecular Signatures Database</a></li>
+        <li><a href="https://docs.gsea-msigdb.org/#" target="_blank">Documentation</a></li>
+        <li><a href="https://docs.gsea-msigdb.org/#Contact" target="_blank">Contact</a></li>
+        <li><a href="team.jsp" rel="nofollow"  target="_parent">Team</a></li>
+        
+      </ul>
+    </div>
+<div id="contentwrapper">
+  <div id="content_navs"  >
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+      <tr>
+        <td class="navs">
+          <div class="nav navCtl">
+            <ul>
+              <li><a href="msigdb/index.jsp" class="navHead">MSigDB Home</a></li>
+            </ul>
+          </div>
+          <div class="nav human">
+            <ul>
+              <li><span class="navHead">Human Collections</span></li>
+              <li><a href="msigdb/human/collections.jsp" class="navItem">About</a></li>
+              <li><a href="msigdb/human/genesets.jsp" class="navItem">Browse</a></li>
+              <li><a href="msigdb/human/search.jsp" class="navItem">Search</a></li>
+              <li><a href="msigdb/human/annotate.jsp" class="navItem">Investigate</a></li>
+              <li><a href="msigdb/human/gene_families.jsp" class="navItem">Gene Families</a></li>
+            </ul>
+          </div>
+          <div class="nav mouse">
+            <ul>
+              <li><span class="navHead">Mouse Collections</span></li>
+              <li><a href="msigdb/mouse/collections.jsp" class="navItem">About</a></li>
+              <li><a href="msigdb/mouse/genesets.jsp" class="navItem">Browse</a></li>
+              <li><a href="msigdb/mouse/search.jsp" class="navItem">Search</a></li>
+              <li><a href="msigdb/mouse/annotate.jsp" class="navItem">Investigate</a></li>
+            </ul>
+          </div>
+          <div class="nav navCtl">
+            <ul>
+              <li><a href="msigdb/help.jsp" class="navHead">Help</a></li>
+            </ul>
+          </div>
+          
+        </td>
+        <td class="margin"><img src="images/spacer.gif" width="34" height="1" /></td>
+        <td class="body">
+          
+            
+            
+              <h1 class="human">Gene Set Not Found
+                
+                <span style="float: right">
+                  <img src="images/UCSDlogo.png" width="146" height="33" border="0" style="padding-left: 5px; padding-right: 5px;" />
+                  <img src="images/BroadLogo.png" width="131" height="33" border="0" style="padding-left: 5px;" />
+                </span>
+                
+              </h1>
+            
+          
+
+<p>A gene set named 'REACTOME_TRANSLATION_INITIATION_COMPLEX_FORMATION' was not found in MSigDB.</p>
+
+<p>It is possible that the gene set has been deprecated or reorganized into other
+  gene sets in the current version of MSigDB.  For information on gene set changes introduced in our latest version,
+  please <a href="https://docs.gsea-msigdb.org/#MSigDB/Release_Notes/MSigDB_Latest/">check the Release Notes</a>.  Release Notes
+  for past versions are available as well.</p>
+
+        </td> <!-- body -->
+      </tr>
+    </table>
+  </div> <!--  content_navs -->
+  
+</div> <!-- contentwrapper -->
+  <div align="left" id="footer" style="padding-right: 5%; padding-left:5%;">
+    Copyright (c) 2004-2026 Broad Institute, Inc., Massachusetts Institute of Technology, and Regents of the University of California.  All rights reserved.
+  </div>
+</div>  <!--wrapper ends here -->
+</body>
+</html>

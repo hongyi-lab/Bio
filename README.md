@@ -142,6 +142,45 @@ Outputs land in `results/phase2/`:
 
 The script reuses `load_scgpt.py` (`load_scgpt_model` + `preprocess_adata_for_scgpt`) so the model side is identical to phase 1; only the hook (full `(B, seq, d)` capture for pooling) and the probe setup differ.
 
+## 7. Phase 3 — TopK SAE on scGPT activations
+
+Phase 2 result, condensed: **scGPT's transformer blocks do not add cell-type-discriminative capacity above the input embedding lookup, and PCA-50 on raw log1p genes beats every scGPT layer by ~3 pp.** Mean-pool peaks at `layer_00_input` (0.932) and decays monotonically to layer 12 (0.819). The earlier "inverted-U" was an artifact of (a) the layer-0 CLS slot being constant before attention, and (b) the missing baseline.
+
+This shifts the question. scGPT is computing *something* during its forward pass — that something is just not cell-type per se. Phase 3 trains a TopK sparse autoencoder on gene-token activations at selected layers and asks:
+
+1. **Reconstruction**: can a sparse code with ~32 active features per token explain the layer's activations?
+2. **Cell-type via sparse code**: after compressing each cell to a mean-SAE-activation vector, does cell-type recover linearly? If yes, the cell-type signal is *there*, just in a sparse / non-linearly-readable layout.
+3. **Gene-set correspondence** *(if `gene_sets/` provided)*: does any SAE feature correlate with a known pathway score (HALLMARK_*, KEGG_*, REACTOME_*)?
+4. **Causal ablation** *(optional)*: zero out the top-k cell-type-correlated features and re-probe — measure the drop.
+
+```bash
+python src/phase3_sae.py                                        # default: layer_00_input, layer_03, layer_12
+python src/phase3_sae.py --layers layer_03                      # one layer
+python src/phase3_sae.py --dict_size 2048 --k 32 --epochs 20    # SAE hyperparams
+python src/phase3_sae.py --gene_sets_dir gene_sets/             # turn on gene-set correlations
+python src/phase3_sae.py --do_ablation --ablation_k 10          # top-k feature ablation
+python src/phase3_sae.py --force_extract --force_retrain        # nuke caches
+```
+
+**Defaults**: `dict_size=2048` (4× expansion of `d_model=512`), `k=32`, `epochs=20`, `batch_size=4096`, `lr=1e-3`. Each layer caches its token activations (~3 GB for pbmc3k) and SAE weights, so re-runs skip the slow steps.
+
+Outputs land in `results/phase3/<layer>/`:
+
+| file | content |
+|---|---|
+| `token_activations.npz` | (N_tokens, d_model) + cell/gene indices — gitignored, regenerable |
+| `sae.pt` | TopKSAE state_dict + config |
+| `training_log.json` | per-epoch loss, var_explained, dead-feature count, mean L0 |
+| `curves.png` | training-curve panel (loss / var_exp / dead features) |
+| `per_cell_features.npz` | (n_cells, n_features) mean SAE activation per cell |
+| `cell_type_probe.json` | 5-seed LR probe on SAE features (compare to phase2 dense) |
+| `gene_set_correlations.json` | Pearson r between each feature and each gene-set score, top-10 per set (when gene sets are loaded) |
+| `feature_ablation.json` | before/after probe with top-k features zeroed (when `--do_ablation`) |
+
+A cross-layer `results/phase3/SUMMARY.md` is also written, with one row per layer and a Δacc-vs-PCA-50 column.
+
+**Gene sets (`gene_sets/`)**: ten public reference sets (HALLMARK MTORC1 / MYC / UPR, KEGG PROTEASOME / RIBOSOME, REACTOME TRANSLATION, GO RIBOSOMAL_SUBUNIT, ER_STRESS, IGARASHI_ATF4, HK_genes). One gene symbol per line; comment lines starting with `#` or `>` and URL lines are skipped. Genes are matched against `adata.var.gene_name`; sets with fewer than 3 overlapping genes are dropped automatically.
+
 ## Troubleshooting
 
 - **`flash_attn` import errors inside scgpt**: ignore — scgpt's transformer falls back to the stock PyTorch implementation when `use_fast_transformer=False`, which is what `load_scgpt.py` sets.
