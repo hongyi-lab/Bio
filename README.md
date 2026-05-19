@@ -237,6 +237,60 @@ The comparison table answers, side by side, the same four questions the scGPT au
 
 Adding a new model is documented in `bio_fm_probe/README.md` — copy `adapters/_template.py` and fill in `load`, `preprocess`, `iter_layer_activations`.
 
+## 9. Phase 5 — recipe layer + SAE−PCA ablation gap (`bio_fm_probe/run_recipe.py`)
+
+Phase 4 toolkit covered "single model × layer probe + SAE" but kept dataset and task hardcoded to pbmc3k + cell-type. Phase 5 fills that gap with a `Dataset` adapter abstraction symmetric to `Model`, plus the headline cross-FM metric: **SAE − PCA ablation gap**.
+
+The ablation gap empirically measures **how distributed each model's knowledge-carrying geometry is**:
+
+- **Concentrated** models (knowledge on few neurons): gap ≈ 0; PCA top-K already locates the knowledge, SAE adds nothing.
+- **Distributed** models (knowledge spread non-orthogonally across many neurons): gap > 0; PCA misses it, SAE recovers the hidden sparse dictionary.
+
+The gap curve over K is the cross-FM benchmark axis: an empirical readout of each model's "knowledge-carrying geometry" rather than another method comparison.
+
+```bash
+# scRNA — scGPT on pbmc3k (reproduce phase 1-3 via recipe)
+python -m bio_fm_probe.run_recipe --model scgpt --model_dir checkpoints/scGPT_human --dataset pbmc3k
+
+# DNA — HyenaDNA on human_nontata_promoters
+python src/download_hyenadna.py && python src/download_genomic_benchmarks.py
+python -m bio_fm_probe.run_recipe --model hyenadna \
+    --model_dir checkpoints/hyenadna-small-32k-seqlen-hf --dataset genomic_benchmarks
+
+# Protein — ESM-2 on DeepLoc
+python src/download_esm2.py && python src/download_deeploc.py
+python -m bio_fm_probe.run_recipe --model esm2 \
+    --model_dir checkpoints/esm2_t12_35M_UR50D --dataset deeploc
+
+# Cross-recipe master table + gap-curve plot
+python -m bio_fm_probe.cross_recipe_summary \
+    scgpt__pbmc3k hyenadna__genomic_benchmarks esm2__deeploc
+```
+
+Outputs land in `results/<model>__<dataset>/audit/`:
+
+| file | content |
+|---|---|
+| `AUDIT.md` | digest (baselines, per-layer probe, SVD, SAE, ablation gap table) |
+| `baselines.json` | modality-appropriate baseline (log1p+PCA / kmer+PCA / onehot_aa+PCA) |
+| `per_layer_probe.json` | per-layer LR probe (CLS + mean-pool, 5 seeds) |
+| `svd_diag.json` | SVD spectrum per SAE layer (PR / k50 / k95 / k99) |
+| `sae/<layer>/sae.pt` | TopK SAE weights |
+| `sae/<layer>/training_log.json` | per-epoch loss / var_exp / dead-features |
+| `sae/<layer>/per_cell_features.npz` | per-cell SAE-aggregated features |
+| `sae/<layer>/per_cell_pca_features.npz` | per-cell PCA-aggregated features (matched dim) |
+| `sae/<layer>/ablation_gap.json` | **the headline** — SAE and PCA ablation curves + gap series |
+| `cls_mean_per_layer.npz` (gitignored) | extraction cache |
+
+Cross-recipe summary writes:
+
+- `results/_master_table.md` — gap@K table modality-grouped
+- `results/_ablation_gap_curves.pdf` — overlay plot of all (model × layer) gap curves
+
+**Modality validation**: `validate_modality_match` refuses to run a (model, dataset) pair where modalities don't match (e.g. scGPT on DNA). This is the explicit guard against rubbish-in-rubbish-out.
+
+The phase 4 entry `run_audit.py` is kept as a legacy path for scRNA-only audits. New work goes through `run_recipe.py`.
+
 ## Troubleshooting
 
 - **`flash_attn` import errors inside scgpt**: ignore — scgpt's transformer falls back to the stock PyTorch implementation when `use_fast_transformer=False`, which is what `load_scgpt.py` sets.

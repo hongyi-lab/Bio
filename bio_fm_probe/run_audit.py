@@ -1,4 +1,11 @@
-"""Run the full audit pipeline on a bio foundation model.
+"""Legacy entry — scRNA + AnnData only.
+
+This is the original phase-4 entry script. It works for scRNA adapters
+(scgpt, geneformer) on a single AnnData h5ad. For DNA / protein models —
+and for the SAE−PCA ablation gap, the headline phase-5 metric — use the
+new `run_recipe.py` instead:
+
+    python -m bio_fm_probe.run_recipe --model <m> --dataset <d>
 
 Pipeline (all results go to results/<adapter>/audit/):
   1. Layer probe (CLS + mean-pool, multi-seed)            -> per_layer_probe.json
@@ -53,8 +60,10 @@ from bio_fm_probe.core.probes import (
 # -----------------------------------------------------------------------------
 ADAPTER_REGISTRY: Dict[str, str] = {
     # working adapters
-    "scgpt":       "bio_fm_probe.adapters.scgpt:ScGPTAdapter",
-    "geneformer":  "bio_fm_probe.adapters.geneformer:GeneformerAdapter",
+    "scgpt":       "bio_fm_probe.adapters.scgpt:ScGPTAdapter",         # scrna
+    "geneformer":  "bio_fm_probe.adapters.geneformer:GeneformerAdapter",  # scrna
+    "hyenadna":    "bio_fm_probe.adapters.hyenadna:HyenaDNAAdapter",   # dna
+    "esm2":        "bio_fm_probe.adapters.esm2:ESM2Adapter",           # protein
     # stubs — un-comment once their adapter file's TODO blocks are filled in
     # "scfoundation": "bio_fm_probe.adapters.scfoundation:ScFoundationAdapter",
     # "scbert":      "bio_fm_probe.adapters.scbert:ScBERTAdapter",

@@ -37,6 +37,7 @@ MASK_TOKEN = "<mask>"
 
 class GeneformerAdapter(BioFMAdapter):
     name = "geneformer"
+    modality = "scrna"
     cls_position = 0   # BertModel + Geneformer prepend <cls>
 
     def __init__(self):

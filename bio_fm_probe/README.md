@@ -1,44 +1,91 @@
 # bio_fm_probe — auditing toolkit for biological foundation models
 
-A model-agnostic version of the scGPT phase 1-3 probes. Drop a new adapter in,
-run one command, get a standardized audit (layer probe + baselines + SVD +
-SAE) with an `AUDIT.md` digest. Then run `compare_models.py` to put several
-models side by side.
+A model-agnostic probing toolkit. Drop a model adapter and a dataset adapter in,
+run one command, get a standardized audit (layer probe + baselines + SVD + SAE
++ **SAE − PCA ablation gap**) with an `AUDIT.md` digest. Then run
+`cross_recipe_summary.py` to put several recipes side by side.
 
-What every audit answers, on the same data, with the same seeds:
+## What the audit answers
 
-1. **Does the model's best representation beat raw PCA-50?** (`baselines.json`)
-2. **Is the layer-0 CLS slot constant before attention?** (`layer0_sanity.json`)
-3. **Where is the model's best layer for cell-type, and how much does pooling matter?** (`per_layer_probe.json`)
+For each `(model, dataset)` recipe — same data, same seeds, modality-appropriate
+baseline:
+
+1. **Does the model beat the modality-appropriate baseline?** (`baselines.json`)
+2. **Is layer-0 CLS slot constant before attention?** (`layer0_sanity.json`, scrna only)
+3. **Where is the model's best layer, and how much does pooling matter?** (`per_layer_probe.json`)
 4. **Does the representation collapse to low rank with depth?** (`svd_diag.json`)
-5. **Can a TopK SAE on selected layers reconstruct the activations, and do its sparse features recover cell type?** (`sae/<layer>/...`)
+5. **Can a TopK SAE reconstruct activations, and do its sparse features recover the task label?** (`sae/<layer>/...`)
+6. **Headline: SAE − PCA ablation gap.** Empirically measures how distributed (vs concentrated) the model's knowledge geometry is. (`sae/<layer>/ablation_gap.json`)
 
-These are the questions phases 1-3 answered for scGPT; the toolkit just makes
-them mechanical to ask of any model with the same interface.
+The ablation gap is the cross-FM benchmark axis: concentrated models (LLaMA-like) → small gap, PCA suffices. Distributed models (Qwen-like) → large gap, only SAE recovers the hidden sparse dictionary PCA misses.
 
 ## Layout
 
 ```
 bio_fm_probe/
 ├── core/
-│   ├── adapter.py          # BioFMAdapter ABC
+│   ├── adapter.py          # BioFMAdapter ABC (model side)
+│   ├── dataset.py          # DatasetAdapter ABC + Sample dataclass
 │   ├── extract.py          # generic per-layer / per-token extraction
-│   └── probes.py           # LR probe, PCA baselines, SVD, TopK SAE
+│   ├── probes.py           # LR probe, PCA baselines, SVD, TopK SAE
+│   ├── baselines.py        # modality-specific baselines (log1p / kmer / aa)
+│   ├── ablation.py         # the SAE − PCA ablation gap
+│   └── recipe.py           # AuditRecipe = (model, dataset) tuple
 ├── adapters/
-│   ├── scgpt.py            # scGPT whole-human adapter
-│   └── _template.py        # copy this to add a new model
-├── run_audit.py            # entry point: one model -> AUDIT.md
-└── compare_models.py       # several models -> cross-model table
+│   ├── scgpt.py            # scRNA
+│   ├── geneformer.py       # scRNA
+│   ├── hyenadna.py         # DNA
+│   ├── esm2.py             # protein
+│   ├── scfoundation.py     # stub
+│   ├── scbert.py           # stub
+│   ├── uce.py              # stub
+│   ├── scmamba.py          # placeholder
+│   ├── scarf.py            # placeholder (no public checkpoint)
+│   └── _template.py        # copy to add a new model
+├── datasets/
+│   ├── pbmc3k.py           # scRNA — legacy benchmark
+│   ├── immune_human.py     # scRNA — cellxgene PBMC
+│   ├── genomic_benchmarks.py  # DNA — human_nontata_promoters
+│   ├── deeploc.py          # protein — subcellular localization
+│   └── _template.py        # copy to add a new dataset
+├── run_recipe.py           # **new headline entry**: one (model, dataset) -> AUDIT.md
+├── run_audit.py            # legacy entry (scRNA + AnnData only)
+└── cross_recipe_summary.py # several recipes -> master table + gap-curve plot
 ```
 
-## Quickstart: run on scGPT
+## Quickstart: run a recipe
 
 ```bash
-python -m bio_fm_probe.run_audit \
-    --adapter scgpt \
-    --model_dir checkpoints/scGPT_human \
-    --data data/pbmc3k.h5ad \
-    --label_col louvain
+# scRNA — scGPT on pbmc3k
+python -m bio_fm_probe.run_recipe \
+    --model scgpt --model_dir checkpoints/scGPT_human \
+    --dataset pbmc3k
+
+# scRNA — Geneformer on immune_human (after running both download scripts)
+python src/download_geneformer.py
+python src/download_immune_human.py
+python -m bio_fm_probe.run_recipe \
+    --model geneformer --model_dir checkpoints/geneformer \
+    --dataset immune_human
+
+# DNA — HyenaDNA on human_nontata_promoters
+python src/download_hyenadna.py
+python src/download_genomic_benchmarks.py
+python -m bio_fm_probe.run_recipe \
+    --model hyenadna --model_dir checkpoints/hyenadna-small-32k-seqlen-hf \
+    --dataset genomic_benchmarks
+
+# Protein — ESM-2 on DeepLoc
+python src/download_esm2.py
+python src/download_deeploc.py
+python -m bio_fm_probe.run_recipe \
+    --model esm2 --model_dir checkpoints/esm2_t12_35M_UR50D \
+    --dataset deeploc
+
+# Cross-recipe summary
+python -m bio_fm_probe.cross_recipe_summary \
+    scgpt__pbmc3k geneformer__immune_human \
+    hyenadna__genomic_benchmarks esm2__deeploc
 ```
 
 Output:
@@ -67,17 +114,50 @@ To skip SAE (much faster — useful for first contact with a new model):
 python -m bio_fm_probe.run_audit --skip_sae --adapter scgpt ...
 ```
 
+## SAE − PCA ablation gap (the headline metric)
+
+For each layer where we train an SAE, we also compute the **ablation gap**:
+
+1. Build two sample-level feature matrices on the same layer's token-level activations:
+   - **PCA features** — PCA of layer activations (default 512 dim), mean-pooled per sample
+   - **SAE features** — TopK SAE codes (default 2048 dim, k=32), mean-pooled per sample
+2. For each K ∈ {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+   - Train LR on the full feature space
+   - Rank features by ‖probe coefficient‖₂ across classes
+   - Zero out top-K features (matched K in both spaces)
+   - Refit LR, measure accuracy drop
+3. **gap@K = drop_PCA − drop_SAE**
+
+Interpretation:
+- **gap > 0**: Knowledge is more distributed than PCA captures. The SAE recovers a hidden sparse dictionary PCA misses. Many small features each carrying a piece of the signal.
+- **gap ≈ 0**: Knowledge is concentrated in PCA-aligned directions. SAE adds nothing extra over PCA. A few large features carry the signal.
+
+A random-selection null is also computed; the real gap should significantly exceed the random-null gap.
+
+This is what we use to compare models cross-modality. The gap **curve over K** (not a single number) is the cross-FM benchmark axis the toolkit is built around.
+
 ## Available adapters
 
-| Adapter | Status | Architecture | Pretrained | Checkpoint source |
+| Adapter | Modality | Status | Architecture | Pretrained | Checkpoint source |
+|---|---|---|---|---|---|
+| `scgpt`        | scrna   | ✅ working | Transformer (12L / 512) | ~30M cells, whole-human | Google Drive (via `src/download_checkpoint.py`) |
+| `geneformer`   | scrna   | ✅ working | BERT (V1: 6L / 256, V2: 12-20L / 512-768) | 30M / 95M cells | HF `ctheodoris/Geneformer` (via `src/download_geneformer.py`) |
+| `hyenadna`     | dna     | ✅ working | Hyena state-space blocks | human reference genome | HF `LongSafari/hyenadna-small-32k-seqlen-hf` (via `src/download_hyenadna.py`) |
+| `esm2`         | protein | ✅ working | Transformer (12L / 480 for 35M variant) | UniRef50 | HF `facebook/esm2_t12_35M_UR50D` (via `src/download_esm2.py`) |
+| `scfoundation` | scrna   | 🟡 stub | xTrimoGene + Performer (100M params)       | ~50M cells              | biomap-research/scFoundation (custom format) |
+| `scbert`       | scrna   | 🟡 stub | Performer (~5M params)                     | PanglaoDB               | github.com/TencentAILabHealthcare/scBERT |
+| `uce`          | scrna   | 🟡 stub | 33L transformer + ESM gene-emb             | 36M cells (multi-species) | github.com/snap-stanford/UCE |
+| `scmamba`      | scrna   | ⚠️ placeholder | Mamba state-space blocks               | unknown | checkpoint availability **unverified** |
+| `scarf`        | scrna   | ⚠️ placeholder | Mamba × CLIP RNA+ATAC                  | 270M cells | not publicly released — contact authors |
+
+## Available datasets
+
+| Dataset | Modality | Baseline | Task | Source |
 |---|---|---|---|---|
-| `scgpt`        | ✅ working | Transformer (12L / 512) | ~30M cells, whole-human | Google Drive (via `src/download_checkpoint.py`) |
-| `geneformer`   | ✅ working | BERT (V1: 6L / 256, V2: 12-20L / 512-768) | 30M / 95M cells | HF `ctheodoris/Geneformer` (via `src/download_geneformer.py`) |
-| `scfoundation` | 🟡 stub    | xTrimoGene + Performer (100M params)       | ~50M cells              | biomap-research/scFoundation (custom format) |
-| `scbert`       | 🟡 stub    | Performer (~5M params)                     | PanglaoDB               | github.com/TencentAILabHealthcare/scBERT |
-| `uce`          | 🟡 stub    | 33L transformer + ESM gene-emb             | 36M cells (multi-species) | github.com/snap-stanford/UCE |
-| `scmamba`      | ⚠️ placeholder | Mamba state-space blocks               | unknown (paper claims 270M paired) | checkpoint availability **unverified** |
-| `scarf`        | ⚠️ placeholder | Mamba × CLIP RNA+ATAC                  | 270M cells              | not publicly released — contact authors |
+| `pbmc3k`              | scrna   | log1p_pca   | cell-type 8-class | bundled with scanpy |
+| `immune_human`        | scrna   | log1p_pca   | cell-type (cellxgene labels) | cellxgene census (via `src/download_immune_human.py`) |
+| `genomic_benchmarks`  | dna     | kmer_pca    | promoter classification (binary) | Grešová et al. 2023 (via `src/download_genomic_benchmarks.py`) |
+| `deeploc`             | protein | onehot_aa_pca | subcellular localization (10-class) | DeepLoc 2.0 (via `src/download_deeploc.py`) |
 
 **Stub** = file exists with the right class skeleton + TODO blocks explaining what's needed. Look at the stub's docstring to know what to fill in for each model.
 

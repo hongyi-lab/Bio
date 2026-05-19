@@ -27,6 +27,7 @@ MAX_LEN = 1200
 
 class ScGPTAdapter(BioFMAdapter):
     name = "scgpt"
+    modality = "scrna"
     cls_position = 0  # scGPT prepends <cls> at sequence position 0
 
     def __init__(self):

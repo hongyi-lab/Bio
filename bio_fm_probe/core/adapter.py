@@ -26,6 +26,7 @@ import torch
 
 class BioFMAdapter(abc.ABC):
     name: str
+    modality: str = "scrna"  # "scrna" | "dna" | "protein" — enforces (model, dataset) compatibility
     n_layers: int = 0   # populated by load()
     d_model: int = 0    # populated by load()
     cls_position: Optional[int] = 0  # override to None for models without CLS
