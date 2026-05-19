@@ -12,6 +12,8 @@ data/
 # Large NPZ caches (embeddings) — regeneratable
 results/*.npz
 results/*.npy
+results/**/*.npz
+results/**/*.npy
 
 # Local-only
 .env

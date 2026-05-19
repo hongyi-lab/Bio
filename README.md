@@ -110,6 +110,38 @@ Loads pbmc3k → loads scGPT → samples 50 cells → extracts embeddings → UM
 - `results/sanity_check_umap.png` (UMAP colored by cell type)
 - `results/sanity_check_summary.json` (shapes, dims, device)
 
+## 6. Phase 2 — controls for the layer probe
+
+Phase 1 produced an inverted-U curve (layer 0 ≈ 0.43, peak at layer 5 ≈ 0.92, layer 12 ≈ 0.88) on a single seed, CLS-only, with no baseline. Before reading hierarchy into that shape, phase 2 tests four alternative explanations in one pass:
+
+| Hypothesis | Test |
+|---|---|
+| **H1**: layer 0 CLS is a constant slot across cells (so the 0→1 jump is artifact) | per-dim std of `layer_00_input[:, 0, :]` vs. a mid-layer CLS reference |
+| **H2**: "layer 5 peak" is within seed noise on a 528-cell test set | re-run with N seeds (default 5), report mean ± std bands |
+| **H3**: pbmc3k cell type is recoverable from any reasonable feature set | PCA-50, PCA-512, raw log1p LR baselines on the same splits |
+| **H4**: CLS-only under-represents late layers if information diffuses to gene tokens | parallel mean-pool curve over non-pad non-CLS gene tokens |
+
+```bash
+python src/phase2_probe.py                                  # default: pbmc3k, seeds 0..4
+python src/phase2_probe.py --force_extract                  # ignore cached activations
+python src/phase2_probe.py --seeds 0 1 2 3 4 5 6 7 8 9      # custom seed list
+python src/phase2_probe.py --skip_baselines                 # H1 + H2 + H4 only
+```
+
+Outputs land in `results/phase2/`:
+
+| file | content |
+|---|---|
+| `layer_activations.npz` | per-layer CLS + mean-pool cache (gitignored, regenerable) |
+| `X_log1p_for_baselines.npy` | preprocessed log1p matrix (gitignored) |
+| `layer0_sanity.json` | std / max-deviation stats for `layer_00_input` vs reference |
+| `baselines.json` | PCA-50, PCA-512, raw log1p × N seeds |
+| `per_layer_probe.json` | per layer × {CLS, mean-pool} × N seeds |
+| `layer_probe_curve_v2.png` | two subplots (accuracy, macro-F1) with mean ± std bands + baseline lines |
+| `SUMMARY.md` | digest with per-layer table and key deltas |
+
+The script reuses `load_scgpt.py` (`load_scgpt_model` + `preprocess_adata_for_scgpt`) so the model side is identical to phase 1; only the hook (full `(B, seq, d)` capture for pooling) and the probe setup differ.
+
 ## Troubleshooting
 
 - **`flash_attn` import errors inside scgpt**: ignore — scgpt's transformer falls back to the stock PyTorch implementation when `use_fast_transformer=False`, which is what `load_scgpt.py` sets.
