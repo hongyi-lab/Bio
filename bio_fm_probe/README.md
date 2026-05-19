@@ -67,6 +67,24 @@ To skip SAE (much faster — useful for first contact with a new model):
 python -m bio_fm_probe.run_audit --skip_sae --adapter scgpt ...
 ```
 
+## Available adapters
+
+| Adapter | Status | Architecture | Pretrained | Checkpoint source |
+|---|---|---|---|---|
+| `scgpt`        | ✅ working | Transformer (12L / 512) | ~30M cells, whole-human | Google Drive (via `src/download_checkpoint.py`) |
+| `geneformer`   | ✅ working | BERT (V1: 6L / 256, V2: 12-20L / 512-768) | 30M / 95M cells | HF `ctheodoris/Geneformer` (via `src/download_geneformer.py`) |
+| `scfoundation` | 🟡 stub    | xTrimoGene + Performer (100M params)       | ~50M cells              | biomap-research/scFoundation (custom format) |
+| `scbert`       | 🟡 stub    | Performer (~5M params)                     | PanglaoDB               | github.com/TencentAILabHealthcare/scBERT |
+| `uce`          | 🟡 stub    | 33L transformer + ESM gene-emb             | 36M cells (multi-species) | github.com/snap-stanford/UCE |
+| `scmamba`      | ⚠️ placeholder | Mamba state-space blocks               | unknown (paper claims 270M paired) | checkpoint availability **unverified** |
+| `scarf`        | ⚠️ placeholder | Mamba × CLIP RNA+ATAC                  | 270M cells              | not publicly released — contact authors |
+
+**Stub** = file exists with the right class skeleton + TODO blocks explaining what's needed. Look at the stub's docstring to know what to fill in for each model.
+
+**Placeholder** = no checkpoint known to be public; the file documents what action is needed to unblock the adapter.
+
+To activate a stub once the model loads cleanly: un-comment its line in `ADAPTER_REGISTRY` inside `run_audit.py`.
+
 ## Adding a new model
 
 1. Copy `adapters/_template.py` to `adapters/<your_model>.py`.

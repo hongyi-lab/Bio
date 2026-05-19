@@ -52,11 +52,15 @@ from bio_fm_probe.core.probes import (
 # Adapter registry. Add new models here.
 # -----------------------------------------------------------------------------
 ADAPTER_REGISTRY: Dict[str, str] = {
-    "scgpt": "bio_fm_probe.adapters.scgpt:ScGPTAdapter",
-    # "scmamba":    "bio_fm_probe.adapters.scmamba:ScMambaAdapter",
-    # "geneformer": "bio_fm_probe.adapters.geneformer:GeneformerAdapter",
+    # working adapters
+    "scgpt":       "bio_fm_probe.adapters.scgpt:ScGPTAdapter",
+    "geneformer":  "bio_fm_probe.adapters.geneformer:GeneformerAdapter",
+    # stubs — un-comment once their adapter file's TODO blocks are filled in
     # "scfoundation": "bio_fm_probe.adapters.scfoundation:ScFoundationAdapter",
-    # "uce": "bio_fm_probe.adapters.uce:UCEAdapter",
+    # "scbert":      "bio_fm_probe.adapters.scbert:ScBERTAdapter",
+    # "uce":         "bio_fm_probe.adapters.uce:UCEAdapter",
+    # "scmamba":     "bio_fm_probe.adapters.scmamba:ScMambaAdapter",
+    # "scarf":       "bio_fm_probe.adapters.scarf:SCARFAdapter",   # checkpoint NOT yet public
 }
 
 
