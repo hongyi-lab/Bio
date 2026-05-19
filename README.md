@@ -1,20 +1,32 @@
-# scGPT_probing
+# bio_fm_probing
 
-Probing experiments on top of the [scGPT](https://github.com/bowang-lab/scGPT) whole-human foundation model. Goal: extract cell- and gene-level embeddings from pretrained scGPT and use them as features for downstream probing.
+Probing biological foundation models. Started on [scGPT](https://github.com/bowang-lab/scGPT) (whole-human) as phases 1-3; now generalized into a model-agnostic toolkit under `bio_fm_probe/` so the same audit can be run on scMamba, Geneformer, scFoundation, UCE, and friends without rewriting probes.
 
 ```
-scGPT_probing/
-├── checkpoints/scGPT_human/   # args.json, vocab.json, best_model.pt
-├── data/                       # pbmc3k.h5ad (and optional multiome .h5)
-├── notebooks/                  # local-only; not stored on the server
-├── src/
+bio_fm_probing/
+├── checkpoints/<model>/        # weights / args / vocab per model (gitignored)
+├── data/                       # pbmc3k.h5ad and other AnnData datasets (gitignored)
+├── gene_sets/                  # public reference gene sets (MSigDB, KEGG, REACTOME, ...)
+├── src/                        # legacy scGPT-specific scripts (phase 1-3)
 │   ├── download_checkpoint.py  # gdown the scGPT whole-human folder
 │   ├── download_data.py        # fetch pbmc3k (and optional 10X multiome)
-│   ├── load_scgpt.py           # load checkpoint, extract embeddings
-│   └── sanity_check.py         # 50-cell pipeline → UMAP png
-├── results/                    # embeddings.npz, UMAP png, summary.json
-└── README.md
+│   ├── load_scgpt.py           # original scGPT loader / embedder
+│   ├── sanity_check.py         # 50-cell UMAP sanity
+│   ├── layer_probe.py          # phase 1: per-layer CLS probe, single seed
+│   ├── phase2_probe.py         # phase 2: + multi-seed, baselines, mean-pool, H1
+│   └── phase3_sae.py           # phase 3: TopK SAE on token-level activations
+├── bio_fm_probe/               # model-agnostic refactor (phase 4)
+│   ├── core/                   # adapter ABC, extraction, probes (LR, PCA, SVD, SAE)
+│   ├── adapters/scgpt.py       # scGPT under the standard interface
+│   ├── adapters/_template.py   # copy this to add a new model
+│   ├── run_audit.py            # one-command end-to-end audit
+│   ├── compare_models.py       # cross-model summary table
+│   └── README.md               # toolkit usage
+├── results/                    # audit outputs (small JSON+PNG tracked; NPZ gitignored)
+└── README.md                   # this file
 ```
+
+The new toolkit (`bio_fm_probe/`) reproduces phase 2/3 results when run on scGPT, and is what we use going forward for other foundation models. Phase 1-3 scripts in `src/` are kept for reproducibility of the original numbers.
 
 > **Note on notebooks**: the repo intentionally has no `.ipynb` files. Sanity-checking is done with `src/sanity_check.py`. Use Jupyter locally if you want to explore interactively.
 
@@ -180,6 +192,50 @@ Outputs land in `results/phase3/<layer>/`:
 A cross-layer `results/phase3/SUMMARY.md` is also written, with one row per layer and a Δacc-vs-PCA-50 column.
 
 **Gene sets (`gene_sets/`)**: ten public reference sets (HALLMARK MTORC1 / MYC / UPR, KEGG PROTEASOME / RIBOSOME, REACTOME TRANSLATION, GO RIBOSOMAL_SUBUNIT, ER_STRESS, IGARASHI_ATF4, HK_genes). One gene symbol per line; comment lines starting with `#` or `>` and URL lines are skipped. Genes are matched against `adata.var.gene_name`; sets with fewer than 3 overlapping genes are dropped automatically.
+
+## 8. Phase 4 — model-agnostic toolkit (`bio_fm_probe/`)
+
+Phases 1-3 worked but were three separate scripts hardcoded for scGPT. Phase 4 turns them into a toolkit so testing the next bio foundation model (scMamba, Geneformer, scFoundation, UCE, …) is "write a ~50-line adapter, run one command, read `AUDIT.md`" rather than "rewrite three scripts".
+
+```
+bio_fm_probe/
+├── core/                       # model-agnostic
+│   ├── adapter.py              # BioFMAdapter ABC (3 methods to implement)
+│   ├── extract.py              # generic forward+hook loop using the adapter
+│   └── probes.py               # LR probe, PCA-50/512 baseline, SVD diag, TopK SAE
+├── adapters/
+│   ├── scgpt.py                # scGPT under the standard interface (refactor of src/)
+│   └── _template.py            # copy to add a new model
+├── run_audit.py                # end-to-end audit → results/<model>/audit/
+└── compare_models.py           # cross-model summary table
+```
+
+Run the full audit on scGPT (equivalent to phase 2 + phase 3 + SVD in one shot):
+
+```bash
+python -m bio_fm_probe.run_audit \
+    --adapter scgpt \
+    --model_dir checkpoints/scGPT_human \
+    --data data/pbmc3k.h5ad \
+    --label_col louvain
+```
+
+Output goes to `results/scgpt/audit/`:
+- `AUDIT.md` — one-page digest (baselines, layer 0 sanity, per-layer table, SVD spectrum, SAE summary)
+- `baselines.json`, `layer0_sanity.json`, `per_layer_probe.json`, `svd_diag.json`
+- `sae/<layer>/` — SAE weights, training log, per-cell sparse features, cell-type probe
+- `cls_mean_per_layer.npz` — extraction cache (gitignored)
+
+Compare several models after each has been audited:
+
+```bash
+python -m bio_fm_probe.compare_models scgpt scmamba geneformer
+# writes results/_cross_model_summary.md
+```
+
+The comparison table answers, side by side, the same four questions the scGPT audit answered: does it beat PCA-50, is layer 0 CLS degenerate, where is the best layer, and does the representation collapse to low rank with depth.
+
+Adding a new model is documented in `bio_fm_probe/README.md` — copy `adapters/_template.py` and fill in `load`, `preprocess`, `iter_layer_activations`.
 
 ## Troubleshooting
 
