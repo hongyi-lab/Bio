@@ -157,8 +157,11 @@ class HyenaDNAAdapter(BioFMAdapter):
                 end = min(start + batch_size, n_samples)
                 input_ids = torch.from_numpy(self._input_ids[start:end]).to(device)
                 attn_mask = torch.from_numpy(self._attn_mask[start:end]).to(device)
+                # HyenaDNA is a state-space model — no attention layer, so
+                # forward() doesn't accept attention_mask. We still keep
+                # attn_mask around to drive the `valid` pooling mask below.
                 with torch.no_grad():
-                    self.model(input_ids=input_ids, attention_mask=attn_mask)
+                    self.model(input_ids=input_ids)
 
                 valid = (attn_mask == 1)
                 # no CLS to exclude — HyenaDNA emits bare nucleotide tokens

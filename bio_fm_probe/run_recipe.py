@@ -139,7 +139,8 @@ def main() -> int:
     cls_dict, mean_dict = extract_cls_and_mean_per_layer(
         adapter, sample.inputs, args.extract_batch_size, args.device,
     )
-    layer_names = sorted(cls_dict.keys())
+    # mean_dict is always populated; cls_dict is empty for models with cls_position=None
+    layer_names = sorted(mean_dict.keys())
 
     # ---------- 2. Layer 0 CLS sanity (skipped for models without CLS) ----------
     if adapter.cls_position is not None:

@@ -1,0 +1,26 @@
+{
+  "layer_00_input_cls": {
+    "shape": [
+      2638,
+      512
+    ],
+    "mean_abs_value": 0.5210487842559814,
+    "std_per_dim_mean": 8.650181371194776e-06,
+    "std_per_dim_median": 4.894523499388015e-06,
+    "std_per_dim_max": 0.00022422308393288404,
+    "max_abs_deviation_from_mean": 0.000225067138671875
+  },
+  "layer_05_cls_reference": {
+    "shape": [
+      2638,
+      512
+    ],
+    "mean_abs_value": 0.7732062935829163,
+    "std_per_dim_mean": 0.04838637635111809,
+    "std_per_dim_median": 0.046145327389240265,
+    "std_per_dim_max": 0.1032012477517128,
+    "max_abs_deviation_from_mean": 0.530150294303894
+  },
+  "ratio_l0_to_ref_std": 0.00017877307254821062,
+  "interpretation_note": "ratio_l0_to_ref_std reports per-dim std of the CLS slot at the input relative to a mid-layer CLS. << 1 means the CLS slot is near-constant at input \u21d2 any layer-0 baseline using CLS-pool is degenerate. Numbers, not verdicts."
+}

@@ -1,0 +1,44 @@
+{
+  "baseline_kind": "kmer_pca",
+  "info": {
+    "kind": "kmer_pca",
+    "k_mer": 6,
+    "n_features_hash": 4096,
+    "n_components": 50,
+    "evr_sum": 0.24172772467136383
+  },
+  "probe": {
+    "accuracy_mean": 0.81885,
+    "accuracy_std": 0.005020582635511516,
+    "macro_f1_mean": 0.8187464718629961,
+    "macro_f1_std": 0.005018775691315035,
+    "n_seeds": 5,
+    "per_seed": [
+      {
+        "seed_idx": 0,
+        "accuracy": 0.81325,
+        "macro_f1": 0.8132146859015532
+      },
+      {
+        "seed_idx": 1,
+        "accuracy": 0.82275,
+        "macro_f1": 0.8226661099866556
+      },
+      {
+        "seed_idx": 2,
+        "accuracy": 0.8135,
+        "macro_f1": 0.8133375570089871
+      },
+      {
+        "seed_idx": 3,
+        "accuracy": 0.823,
+        "macro_f1": 0.8229219085616757
+      },
+      {
+        "seed_idx": 4,
+        "accuracy": 0.82175,
+        "macro_f1": 0.8215920978561088
+      }
+    ]
+  }
+}

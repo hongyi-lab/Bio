@@ -20,13 +20,15 @@ def extract_cls_and_mean_per_layer(
     """
     cls_buf: Dict[str, List[np.ndarray]] = {}
     mean_buf: Dict[str, List[np.ndarray]] = {}
+    has_cls = adapter.cls_position is not None
 
     for captured, valid in adapter.iter_layer_activations(adata, batch_size, device):
         for name, tensor in captured.items():
-            cls_v = adapter.pool_cls(tensor, valid).cpu().numpy()
             mean_v = adapter.pool_mean(tensor, valid).cpu().numpy()
-            cls_buf.setdefault(name, []).append(cls_v)
             mean_buf.setdefault(name, []).append(mean_v)
+            if has_cls:
+                cls_v = adapter.pool_cls(tensor, valid).cpu().numpy()
+                cls_buf.setdefault(name, []).append(cls_v)
 
     return (
         {k: np.concatenate(v, axis=0) for k, v in sorted(cls_buf.items())},
