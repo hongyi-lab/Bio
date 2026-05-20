@@ -47,9 +47,10 @@ ROOT = THIS.parent.parent
 sys.path.insert(0, str(THIS.parent))
 
 from common_sae import (  # noqa: E402
-    aggregate_per_cell, agg, encode_batched, extract_tokens_from_iter,
-    make_splits, probe, sae_pca_ablation_gap, svd_spectrum_diagnostic,
-    train_topk_sae,
+    aggregate_per_cell, agg, encode_batched, extract_summary_fields,
+    extract_tokens_from_iter,
+    make_splits, plot_phase7_summary, probe, sae_pca_ablation_gap,
+    svd_spectrum_diagnostic, train_topk_sae, write_phase7_report,
 )
 
 
@@ -400,13 +401,7 @@ def main() -> int:
             "pca_probe": pca_probe,
             "sae_probe": sae_probe,
             "k99": k99,
-            "gap_K_grid": K_grid,
-            "gap_mean": gap["gap"]["gap_mean"],
-            "gap_std": gap["gap"]["gap_std"],
-            "gap_null_mean": gap.get("gap_random", {}).get("gap_mean"),
-            "gap_null_std": gap.get("gap_random", {}).get("gap_std"),
-            "significance_per_K": gap.get("significance_2sigma_per_K"),
-            "any_K_significant": gap.get("any_K_significant"),
+            **extract_summary_fields(gap),
         }
         del token_acts, X_pca_cell, X_sae_cell, tok_codes
         if torch.cuda.is_available():
@@ -426,162 +421,16 @@ def main() -> int:
                     "per_layer": sae_summary},
                    indent=2))
 
-    # Plot
-    plot_summary(out_dir, sae_layers, sae_summary)
-
-    # REPORT.md
-    write_report(out_dir, "evo2_7b", "genomic_benchmarks",
-                 d_model, n_layers, sae_layers, sae_dict, args.sae_k,
-                 args.sae_expansion, pca_dim, args.seeds, len(seqs),
-                 sae_summary, svd_results)
+    # Plot + REPORT (shared helpers in common_sae.py — phase 7.1 protocol-aligned)
+    plot_phase7_summary(out_dir, sae_layers, sae_summary,
+                        model_name="Evo-2 7B", dataset_name="genomic_benchmarks")
+    write_phase7_report(out_dir, "evo2_7b", "genomic_benchmarks",
+                        d_model, n_layers, sae_layers, sae_dict, args.sae_k,
+                        args.sae_expansion, pca_dim, args.seeds, len(seqs),
+                        sae_summary, svd_results)
 
     print(f"\n[evo2] === DONE === outputs in {out_dir}")
     return 0
-
-
-def plot_summary(out_dir: Path, sae_layers: List[str], sae_summary: Dict):
-    """2x2 summary plot: per-layer probe acc, ablation gap curve, var_exp+dead,
-    significance marks."""
-    fig, axes = plt.subplots(2, 2, figsize=(13, 9))
-
-    # (0,0) per-layer probe acc (PCA vs SAE)
-    ax = axes[0, 0]
-    xs = np.arange(len(sae_layers))
-    pca_m = [sae_summary[l]["pca_probe"]["accuracy_mean"] for l in sae_layers]
-    pca_s = [sae_summary[l]["pca_probe"]["accuracy_std"] for l in sae_layers]
-    sae_m = [sae_summary[l]["sae_probe"]["accuracy_mean"] for l in sae_layers]
-    sae_s = [sae_summary[l]["sae_probe"]["accuracy_std"] for l in sae_layers]
-    ax.errorbar(xs, pca_m, yerr=pca_s, marker="o", label="PCA-probe", color="C0")
-    ax.errorbar(xs, sae_m, yerr=sae_s, marker="s", label="SAE-probe", color="C1")
-    ax.set_xticks(xs); ax.set_xticklabels(sae_layers, rotation=15, fontsize=8)
-    ax.set_xlabel("layer"); ax.set_ylabel("probe acc")
-    ax.set_title("Per-layer probe: PCA vs SAE features")
-    ax.grid(alpha=0.3); ax.legend(fontsize=8)
-
-    # (0,1) ablation gap curves with random null bands
-    ax = axes[0, 1]
-    colors = ["C0", "C2", "C3", "C4", "C5"]
-    for i, l in enumerate(sae_layers):
-        K = sae_summary[l]["gap_K_grid"]
-        m = np.array(sae_summary[l]["gap_mean"])
-        s = np.array(sae_summary[l]["gap_std"])
-        c = colors[i % len(colors)]
-        ax.plot(K, m, marker="o", color=c, label=l)
-        ax.fill_between(K, m - s, m + s, color=c, alpha=0.2)
-        if sae_summary[l].get("gap_null_mean") is not None:
-            nm = np.array(sae_summary[l]["gap_null_mean"])
-            ns = np.array(sae_summary[l]["gap_null_std"])
-            ax.fill_between(K, nm - 2 * ns, nm + 2 * ns,
-                            color=c, alpha=0.08, hatch="//")
-    ax.axhline(0, color="black", ls=":", alpha=0.5)
-    ax.set_xscale("log", base=2)
-    ax.set_xlabel("K (ablated features)")
-    ax.set_ylabel("gap = drop_PCA - drop_SAE")
-    ax.set_title("Ablation gap (real) vs 2σ random null (hatched)")
-    ax.grid(alpha=0.3); ax.legend(fontsize=8)
-
-    # (1,0) var explained + dead features per layer
-    ax = axes[1, 0]
-    ax2 = ax.twinx()
-    ve = [sae_summary[l]["var_explained_final"] for l in sae_layers]
-    dead = [sae_summary[l]["dead_features_ever"] for l in sae_layers]
-    ax.bar(xs - 0.2, ve, width=0.4, color="C0", label="var explained")
-    ax2.bar(xs + 0.2, dead, width=0.4, color="C3", alpha=0.7, label="dead features")
-    ax.set_xticks(xs); ax.set_xticklabels(sae_layers, rotation=15, fontsize=8)
-    ax.set_ylabel("var explained", color="C0")
-    ax2.set_ylabel("# dead features (ever)", color="C3")
-    ax.set_title("SAE training quality")
-    ax.set_ylim(0, 1.05)
-    ax.grid(alpha=0.3)
-
-    # (1,1) significance per K per layer
-    ax = axes[1, 1]
-    sig_grid = np.zeros((len(sae_layers), len(sae_summary[sae_layers[0]]["gap_K_grid"])))
-    for i, l in enumerate(sae_layers):
-        s = sae_summary[l].get("significance_per_K") or [False] * sig_grid.shape[1]
-        sig_grid[i, :len(s)] = [float(b) for b in s]
-    im = ax.imshow(sig_grid, aspect="auto", cmap="Greens", vmin=0, vmax=1)
-    ax.set_xticks(np.arange(sig_grid.shape[1]))
-    ax.set_xticklabels(sae_summary[sae_layers[0]]["gap_K_grid"], rotation=0, fontsize=8)
-    ax.set_yticks(np.arange(len(sae_layers)))
-    ax.set_yticklabels(sae_layers)
-    ax.set_xlabel("K"); ax.set_ylabel("layer")
-    ax.set_title("Per-K, per-layer: real gap > 2σ above random null?")
-    fig.colorbar(im, ax=ax, label="significant (0=no, 1=yes)")
-
-    fig.suptitle("Evo-2 7B × genomic_benchmarks — phase 7 probe summary",
-                 y=0.99, fontsize=12, weight="bold")
-    fig.tight_layout(rect=[0, 0, 1, 0.97])
-    out_path = out_dir / "summary.png"
-    fig.savefig(out_path, dpi=140, bbox_inches="tight")
-    fig.savefig(out_dir / "summary.pdf", bbox_inches="tight")
-    plt.close(fig)
-    print(f"[evo2] wrote {out_path}")
-
-
-def write_report(out_dir, model_name, dataset_name, d_model, n_layers,
-                 sae_layers, sae_dict, sae_k, sae_expansion, pca_dim,
-                 seeds, n_samples, sae_summary, svd_results):
-    md = [f"# Phase 7 — {model_name} × {dataset_name}\n"]
-    md.append(f"- Model: `{model_name}` (d_model={d_model}, n_layers={n_layers})")
-    md.append(f"- Dataset: `{dataset_name}`, n_samples={n_samples}")
-    md.append(f"- SAE: expansion={sae_expansion}× (dict={sae_dict}), k={sae_k}")
-    md.append(f"- PCA dim: {pca_dim} (matched-dim policy)")
-    md.append(f"- Seeds: {seeds}\n")
-
-    md.append("## Per-layer probe results")
-    md.append("| layer | PCA acc | SAE acc | Δ(SAE − PCA) | SAE var_exp | dead | k99 |")
-    md.append("|---|---|---|---|---|---|---|")
-    for l in sae_layers:
-        s = sae_summary[l]
-        pca_m = s["pca_probe"]["accuracy_mean"]
-        pca_sd = s["pca_probe"]["accuracy_std"]
-        sae_m = s["sae_probe"]["accuracy_mean"]
-        sae_sd = s["sae_probe"]["accuracy_std"]
-        md.append(
-            f"| {l} | {pca_m:.4f}±{pca_sd:.4f} | {sae_m:.4f}±{sae_sd:.4f} "
-            f"| {sae_m - pca_m:+.4f} | {s['var_explained_final']:.3f} "
-            f"| {s['dead_features_ever']}/{sae_dict} | {s['k99']} |")
-    md.append("")
-
-    md.append("## SAE − PCA ablation gap (significant K marked ★)")
-    md.append("Positive gap ⇒ knowledge more **distributed** than PCA captures.")
-    md.append("★ = real gap exceeds random-null by ≥ 2σ (per-K).\n")
-    K_grids = sae_summary[sae_layers[0]]["gap_K_grid"]
-    md.append("| layer | " + " | ".join(f"K={k}" for k in K_grids) + " |")
-    md.append("|---|" + "---|" * len(K_grids))
-    for l in sae_layers:
-        s = sae_summary[l]
-        row = [l]
-        for i in range(len(s["gap_K_grid"])):
-            sig = (s.get("significance_per_K") or [False] * len(s["gap_K_grid"]))[i]
-            marker = "★" if sig else ""
-            row.append(f"{s['gap_mean'][i]:+.3f}±{s['gap_std'][i]:.3f}{marker}")
-        md.append("| " + " | ".join(row) + " |")
-    md.append("")
-
-    md.append("## SVD spectrum")
-    md.append("| layer | PR | k50 | k95 | k99 | var_per_elem |")
-    md.append("|---|---|---|---|---|---|")
-    for l, ss in svd_results.items():
-        md.append(f"| {l} | {ss['participation_ratio']:.1f} | "
-                  f"{ss['k50']} | {ss['k95']} | {ss['k99']} | "
-                  f"{ss['var_per_elem']:.3f} |")
-    md.append("")
-
-    md.append("## Significance digest")
-    any_sig = [l for l in sae_layers if sae_summary[l].get("any_K_significant")]
-    if any_sig:
-        md.append(f"- **Signal detected**: layers with ≥1 K above 2σ random null: "
-                  f"{', '.join(any_sig)}")
-    else:
-        md.append(f"- **No signal**: no layer has any K where real gap exceeds "
-                  f"random-null by 2σ → consistent with 'bio FM at LLM scale "
-                  f"still doesn't show ablation gap above noise'.")
-    md.append("")
-
-    (out_dir / "REPORT.md").write_text("\n".join(md))
-    print(f"[evo2] wrote {out_dir / 'REPORT.md'}")
 
 
 if __name__ == "__main__":
