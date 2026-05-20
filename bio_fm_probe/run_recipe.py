@@ -74,7 +74,12 @@ def main() -> int:
     p.add_argument("--extract_batch_size", type=int, default=16)
     # SAE
     p.add_argument("--sae_layers", nargs="+", default=None)
-    p.add_argument("--sae_dict", type=int, default=2048)
+    p.add_argument("--sae_expansion", type=float, default=4.0,
+                   help="SAE dict_size = expansion × d_model. Uniform across "
+                        "models so cross-FM comparison is fair. Default 4×; "
+                        "Lucas's phase 6 spec is 16×.")
+    p.add_argument("--sae_dict", type=int, default=None,
+                   help="override absolute dict_size; bypasses --sae_expansion")
     p.add_argument("--sae_k", type=int, default=32)
     p.add_argument("--sae_epochs", type=int, default=20)
     p.add_argument("--sae_batch", type=int, default=4096)
@@ -120,6 +125,14 @@ def main() -> int:
 
     print(f"[recipe] loading {adapter.name} from {args.model_dir}")
     adapter.load(args.model_dir, device=args.device)
+
+    # Resolve SAE dict size: explicit --sae_dict wins, else expansion × d_model.
+    if args.sae_dict is None:
+        sae_dict = max(64, int(round(args.sae_expansion * adapter.d_model)))
+    else:
+        sae_dict = args.sae_dict
+    print(f"[recipe] SAE dict_size = {sae_dict}  "
+          f"(expansion = {sae_dict / adapter.d_model:.2f}× over d_model={adapter.d_model})")
 
     y = sample.labels
     classes, y = np.unique(y, return_inverse=True)
@@ -206,14 +219,14 @@ def main() -> int:
             # 7. Train SAE
             sae, train_log = train_topk_sae(
                 tok_acts, d_in=adapter.d_model,
-                n_features=args.sae_dict, k=args.sae_k,
+                n_features=sae_dict, k=args.sae_k,
                 batch_size=args.sae_batch, epochs=args.sae_epochs,
                 lr=args.sae_lr, device=args.device,
             )
             torch.save({
                 "state_dict": sae.state_dict(),
                 "config": {"d_in": adapter.d_model,
-                           "n_features": args.sae_dict, "k": args.sae_k},
+                           "n_features": sae_dict, "k": args.sae_k},
                 "layer": layer,
             }, ld / "sae.pt")
             (ld / "training_log.json").write_text(json.dumps(train_log, indent=2))
@@ -314,7 +327,7 @@ def main() -> int:
             pca_pr = s["cell_type_probe_pca"]
             md.append(
                 f"| {layer} | {s['var_explained_final']:.3f} "
-                f"| {s['dead_features_ever']}/{args.sae_dict} "
+                f"| {s['dead_features_ever']}/{sae_dict} "
                 f"| {sae_pr['accuracy_mean']:.4f}±{sae_pr['accuracy_std']:.4f} "
                 f"| {pca_pr['accuracy_mean']:.4f}±{pca_pr['accuracy_std']:.4f} |"
             )

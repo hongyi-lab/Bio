@@ -142,7 +142,8 @@ This is what we use to compare models cross-modality. The gap **curve over K** (
 |---|---|---|---|---|---|
 | `scgpt`        | scrna   | ✅ working | Transformer (12L / 512) | ~30M cells, whole-human | Google Drive (via `src/download_checkpoint.py`) |
 | `geneformer`   | scrna   | ✅ working | BERT (V1: 6L / 256, V2: 12-20L / 512-768) | 30M / 95M cells | HF `ctheodoris/Geneformer` (via `src/download_geneformer.py`) |
-| `hyenadna`     | dna     | ✅ working | Hyena state-space blocks | human reference genome | HF `LongSafari/hyenadna-small-32k-seqlen-hf` (via `src/download_hyenadna.py`) |
+| `hyenadna`     | dna     | ✅ working | Hyena state-space blocks (6.6M) | human reference genome | HF `LongSafari/hyenadna-small-32k-seqlen-hf` (via `src/download_hyenadna.py`) |
+| `evo`          | dna     | ✅ working | StripedHyena (7B, **LLM-scale**) | 80B nucleotides (prokaryotic + bacteriophage) | HF `togethercomputer/evo-1-8k-base` (via `src/download_evo.py`) |
 | `esm2`         | protein | ✅ working | Transformer (12L / 480 for 35M variant) | UniRef50 | HF `facebook/esm2_t12_35M_UR50D` (via `src/download_esm2.py`) |
 | `scfoundation` | scrna   | 🟡 stub | xTrimoGene + Performer (100M params)       | ~50M cells              | biomap-research/scFoundation (custom format) |
 | `scbert`       | scrna   | 🟡 stub | Performer (~5M params)                     | PanglaoDB               | github.com/TencentAILabHealthcare/scBERT |

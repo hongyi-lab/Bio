@@ -62,7 +62,8 @@ ADAPTER_REGISTRY: Dict[str, str] = {
     # working adapters
     "scgpt":       "bio_fm_probe.adapters.scgpt:ScGPTAdapter",         # scrna
     "geneformer":  "bio_fm_probe.adapters.geneformer:GeneformerAdapter",  # scrna
-    "hyenadna":    "bio_fm_probe.adapters.hyenadna:HyenaDNAAdapter",   # dna
+    "hyenadna":    "bio_fm_probe.adapters.hyenadna:HyenaDNAAdapter",   # dna (6.6M)
+    "evo":         "bio_fm_probe.adapters.evo:EvoAdapter",             # dna (7B, LLM-scale)
     "esm2":        "bio_fm_probe.adapters.esm2:ESM2Adapter",           # protein
     # stubs — un-comment once their adapter file's TODO blocks are filled in
     # "scfoundation": "bio_fm_probe.adapters.scfoundation:ScFoundationAdapter",
