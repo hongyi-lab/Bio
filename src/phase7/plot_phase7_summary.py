@@ -30,7 +30,7 @@ import numpy as np
 
 
 THIS = Path(__file__).resolve()
-ROOT = THIS.parent.parent
+ROOT = THIS.parent.parent.parent  # script lives at src/phase7/ → 3 hops to project root
 RESULTS = ROOT / "results"
 
 

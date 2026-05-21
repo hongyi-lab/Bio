@@ -99,6 +99,61 @@ def agg(runs):
 
 
 # ============================================================================
+# Memory-efficient PCA: fit on a subsample, project + aggregate per cell
+# in chunks so we never materialize the (n_tokens, n_components) fp64 matrix.
+# Critical for LLM-scale models (Evo-1 / ESM-2-15B): naive
+# sklearn PCA.fit_transform on (5M, 4096) needs ~328 GB working memory.
+# ============================================================================
+def fit_pca_and_aggregate_per_cell(
+    activations: np.ndarray,
+    cell_idx: np.ndarray,
+    n_cells: int,
+    n_components: int,
+    sample_n: int = 200_000,
+    chunk: int = 100_000,
+    random_state: int = 0,
+):
+    """Fit PCA on a uniform sample of `activations`, then project the full
+    array in chunks and mean-pool per cell on the fly.
+
+    Returns (X_cell_pca: (n_cells, n_components) float32, pca: fitted PCA).
+
+    Memory: peaks at ~max(sample_n×d×8B for fit, chunk×d×4B for project).
+    """
+    from sklearn.decomposition import PCA  # local import to keep top-level cheap
+    n, d = activations.shape
+    rng = np.random.default_rng(random_state)
+    if n > sample_n:
+        idx = np.sort(rng.choice(n, sample_n, replace=False))
+        X_sub = activations[idx].astype(np.float32)
+    else:
+        X_sub = activations.astype(np.float32)
+
+    pca = PCA(n_components=n_components, random_state=random_state)
+    pca.fit(X_sub)
+    del X_sub
+    n_comp = int(pca.n_components_)
+    mean_ = pca.mean_.astype(np.float32)
+    comps = pca.components_.astype(np.float32)
+
+    # Accumulate in fp64 for numerical stability of the per-cell mean
+    cell_sum = np.zeros((n_cells, n_comp), dtype=np.float64)
+    cell_n = np.zeros(n_cells, dtype=np.int64)
+    from tqdm import tqdm as _tqdm
+    n_chunks = (n + chunk - 1) // chunk
+    for i in _tqdm(range(0, n, chunk), total=n_chunks,
+                   desc="[pca] project+aggregate", unit="chunk"):
+        j = min(i + chunk, n)
+        ci = np.asarray(cell_idx[i:j])
+        chunk_proj = (activations[i:j].astype(np.float32) - mean_) @ comps.T
+        np.add.at(cell_sum, ci, chunk_proj.astype(np.float64))
+        np.add.at(cell_n, ci, 1)
+    cell_n = np.clip(cell_n, 1, None)
+    cell_features = (cell_sum / cell_n[:, None]).astype(np.float32)
+    return cell_features, pca
+
+
+# ============================================================================
 # SVD spectrum diagnostic
 # ============================================================================
 def svd_spectrum_diagnostic(
@@ -201,12 +256,15 @@ def train_topk_sae(
     }
     ever_active = torch.zeros(n_features, dtype=torch.bool, device=device)
 
-    for epoch in range(epochs):
+    from tqdm import tqdm as _tqdm
+    epoch_bar = _tqdm(range(epochs), desc="[sae] train", unit="epoch")
+    for epoch in epoch_bar:
         t0 = time.time()
         perm = torch.randperm(n_tokens)
         losses, l0s = [], []
         active_this = torch.zeros(n_features, dtype=torch.bool, device=device)
-        for b in range(n_batches):
+        for b in _tqdm(range(n_batches), desc=f"  epoch {epoch + 1}/{epochs}",
+                       leave=False, unit="batch", mininterval=1.0):
             idx = perm[b * batch_size:(b + 1) * batch_size]
             x = act_t[idx].to(device, non_blocking=True)
             x_recon, z = sae(x)
@@ -236,6 +294,40 @@ def train_topk_sae(
 
     log["dead_features_ever"] = int(n_features - ever_active.sum().item())
     return sae, log
+
+
+@torch.no_grad()
+def encode_and_aggregate_per_cell(
+    sae: TopKSAE, activations, cell_idx, n_cells: int,
+    batch_size: int = 4096, device: str = "cuda",
+) -> np.ndarray:
+    """Stream SAE encode + per-cell mean aggregation in one fused pass.
+
+    Avoids materializing the (N_tokens, n_features) sparse code matrix that
+    encode_batched needs (which is 306 GB for Evo-1: 5M tokens x 16384 features).
+    Only one chunk's code (batch_size x n_features) lives in memory at a time.
+
+    Memory peak: ~batch_size * n_features * 4B (per-chunk codes) +
+                 n_cells * n_features * 8B (fp64 accumulator).
+    """
+    sae.eval()
+    n = int(activations.shape[0])
+    n_feat = int(sae.n_features)
+
+    cell_sum = np.zeros((n_cells, n_feat), dtype=np.float64)
+    cell_n = np.zeros(n_cells, dtype=np.int64)
+    from tqdm import tqdm as _tqdm
+    for b in _tqdm(range(0, n, batch_size),
+                   total=(n + batch_size - 1) // batch_size,
+                   desc="[sae] encode+aggregate", unit="batch"):
+        j = min(b + batch_size, n)
+        x = torch.from_numpy(activations[b:j].astype(np.float32)).to(device, non_blocking=True)
+        z = sae.encode(x).cpu().numpy()  # (B, n_feat) fp32
+        ci = np.asarray(cell_idx[b:j])
+        np.add.at(cell_sum, ci, z.astype(np.float64))
+        np.add.at(cell_n, ci, 1)
+    cell_n = np.clip(cell_n, 1, None)
+    return (cell_sum / cell_n[:, None]).astype(np.float32)
 
 
 @torch.no_grad()
@@ -311,7 +403,9 @@ def ablation_curve(
     K_grid = list(K_grid) if K_grid is not None else list(DEFAULT_K_GRID)
     rng = np.random.default_rng(seed_for_random)
     per_seed = []
-    for s, (tr, te) in enumerate(splits):
+    from tqdm import tqdm as _tqdm
+    for s, (tr, te) in enumerate(_tqdm(splits, desc=f"  ablation[{criterion}]",
+                                       unit="seed", leave=False)):
         base, per_K = _ablation_curve_one_seed(
             X, y, tr, te, K_grid, criterion, rng,
         )
@@ -461,7 +555,10 @@ def extract_tokens_from_iter(
             torch.arange(cells_processed, cells_processed + B, device=x.device)
             .unsqueeze(1).expand_as(valid)
         )
-        acts_chunks.append(x[valid].cpu().numpy().astype(np.float32))
+        # Store as fp16 — activations came from an fp16 forward pass, so this is the
+        # original precision (no info loss). All consumers (train_topk_sae,
+        # encode_batched, svd_spectrum_diagnostic, PCA) promote to fp32/fp64 on load.
+        acts_chunks.append(x[valid].cpu().numpy().astype(np.float16))
         cell_chunks.append(cell_idx_full[valid].cpu().numpy().astype(np.int64))
         cells_processed += B
     return (

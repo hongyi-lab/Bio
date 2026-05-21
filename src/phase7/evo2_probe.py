@@ -10,7 +10,7 @@ in one file:
   4. Per layer:
        (a) SVD spectrum diagnostic
        (b) PCA fit on tokens → mean-pool per sample → PCA-probe (5 seeds)
-       (c) TopK SAE training (expansion=32× by default) → encode →
+       (c) TopK SAE training (expansion=4× by default) → encode →
            mean-pool per sample → SAE-probe (5 seeds)
        (d) SAE - PCA ablation gap + random-feature ablation null
   5. Write per-layer JSON outputs + per-recipe REPORT.md + summary plot.
@@ -43,8 +43,14 @@ from sklearn.decomposition import PCA
 from tqdm import tqdm
 
 THIS = Path(__file__).resolve()
-ROOT = THIS.parent.parent
+ROOT = THIS.parent.parent.parent  # script lives at src/phase7/ → 3 hops to project root
 sys.path.insert(0, str(THIS.parent))
+
+
+def _resolve(p: str) -> str:
+    """Anchor a relative path to ROOT so the script works from any cwd."""
+    path = Path(p)
+    return str(path if path.is_absolute() else ROOT / path)
 
 from common_sae import (  # noqa: E402
     aggregate_per_cell, agg, encode_batched, extract_summary_fields,
@@ -204,7 +210,9 @@ def main() -> int:
                    default="data/genomic_benchmarks/human_nontata_promoters")
     p.add_argument("--sae_layers", nargs="+", default=None,
                    help="default: input, mid, final")
-    p.add_argument("--sae_expansion", type=float, default=32.0)
+    p.add_argument("--sae_expansion", type=float, default=4.0,
+                   help="SAE dict_size = expansion × d_model. Default 4× for "
+                        "cross-FM parity with phase 5 (scgpt/hyenadna).")
     p.add_argument("--sae_k", type=int, default=32)
     p.add_argument("--sae_epochs", type=int, default=20)
     p.add_argument("--sae_batch", type=int, default=4096)
@@ -227,14 +235,13 @@ def main() -> int:
     args = p.parse_args()
 
     # Output dir
-    out_dir = (Path(args.out) if args.out
+    out_dir = (Path(_resolve(args.out)) if args.out
                else ROOT / "results" / "evo2_7b__genomic_benchmarks")
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"[evo2] output -> {out_dir}")
 
     # Data
-    data_dir = (Path(args.data_dir) if Path(args.data_dir).is_absolute()
-                else ROOT / args.data_dir)
+    data_dir = Path(_resolve(args.data_dir))
     seqs, labels = load_genomic_benchmarks(data_dir)
     print(f"[evo2] loaded {len(seqs)} sequences from {data_dir}, "
           f"n_classes={len(np.unique(labels))}, "
@@ -251,7 +258,7 @@ def main() -> int:
 
     # Load model
     model, tok, d_model, n_layers, blocks_attr = load_evo2(
-        args.model_dir, device=args.device, fp16=not args.no_fp16,
+        _resolve(args.model_dir), device=args.device, fp16=not args.no_fp16,
     )
 
     # Tokenize once for whole dataset

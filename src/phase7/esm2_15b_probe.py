@@ -41,12 +41,18 @@ from sklearn.decomposition import PCA
 from tqdm import tqdm
 
 THIS = Path(__file__).resolve()
-ROOT = THIS.parent.parent
+ROOT = THIS.parent.parent.parent  # script lives at src/phase7/ → 3 hops to project root
 sys.path.insert(0, str(THIS.parent))
+
+
+def _resolve(p: str) -> str:
+    """Anchor a relative path to ROOT so the script works from any cwd."""
+    path = Path(p)
+    return str(path if path.is_absolute() else ROOT / path)
 
 from common_sae import (  # noqa: E402
     aggregate_per_cell, agg, encode_batched, extract_summary_fields,
-    extract_tokens_from_iter,
+    extract_tokens_from_iter, fit_pca_and_aggregate_per_cell,
     make_splits, plot_phase7_summary, probe, sae_pca_ablation_gap,
     svd_spectrum_diagnostic, train_topk_sae, write_phase7_report,
 )
@@ -205,13 +211,12 @@ def main() -> int:
                    help="default: results/esm2_15b__deeploc/")
     args = p.parse_args()
 
-    out_dir = (Path(args.out) if args.out
+    out_dir = (Path(_resolve(args.out)) if args.out
                else ROOT / "results" / "esm2_15b__deeploc")
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"[esm2-15b] output -> {out_dir}")
 
-    data_path = (Path(args.data_path) if Path(args.data_path).is_absolute()
-                 else ROOT / args.data_path)
+    data_path = Path(_resolve(args.data_path))
     seqs, labels = load_deeploc(data_path)
     print(f"[esm2-15b] loaded {len(seqs)} sequences from {data_path}, "
           f"n_classes={len(np.unique(labels))}, "
@@ -230,7 +235,7 @@ def main() -> int:
     y_classes, y = np.unique(labels, return_inverse=True)
 
     model, tok, d_model, n_layers = load_esm2_15b(
-        args.model_dir, device=args.device, fp16=not args.no_fp16,
+        _resolve(args.model_dir), device=args.device, fp16=not args.no_fp16,
     )
 
     # Tokenize whole dataset
@@ -270,9 +275,12 @@ def main() -> int:
 
         # ---- Extract token activations ----
         if acts_cache.exists() and not args.force:
-            print(f"[esm2-15b] loading cached activations from {acts_cache}")
-            d = np.load(acts_cache, allow_pickle=False)
+            sz_gb = acts_cache.stat().st_size / 1e9
+            print(f"[esm2-15b] mmap-loading cached activations from {acts_cache} ({sz_gb:.2f} GB)")
+            d = np.load(acts_cache, allow_pickle=False, mmap_mode="r")
             token_acts, token_cell = d["acts"], d["cell_idx"]
+            print(f"[esm2-15b] cached shapes: acts={token_acts.shape} {token_acts.dtype}, "
+                  f"cell_idx={token_cell.shape}")
         else:
             t0 = time.time()
             token_acts, token_cell = extract_tokens_from_iter(
@@ -297,12 +305,14 @@ def main() -> int:
               f"k99={svd_results[layer]['k99']}")
 
         # ---- PCA fit ----
+        # Memory-safe streaming path (see common_sae.fit_pca_and_aggregate_per_cell)
         print(f"[esm2-15b] fitting PCA(n={pca_dim}) on "
-              f"{token_acts.shape[0]} tokens ...")
+              f"{token_acts.shape[0]} tokens (streaming, chunked) ...")
         n_pca = min(pca_dim, token_acts.shape[1], token_acts.shape[0] - 1)
-        pca = PCA(n_components=n_pca, random_state=0)
-        tok_pca = pca.fit_transform(token_acts).astype(np.float32)
-        X_pca_cell = aggregate_per_cell(tok_pca, token_cell, n_cells=n_cells)
+        X_pca_cell, pca = fit_pca_and_aggregate_per_cell(
+            token_acts, token_cell, n_cells=n_cells,
+            n_components=n_pca, random_state=0,
+        )
         np.savez(layer_dir / "per_cell_pca_features.npz",
                  features=X_pca_cell, labels=y,
                  evr_sum=pca.explained_variance_ratio_.sum())
