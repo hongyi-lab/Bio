@@ -1,0 +1,919 @@
+{
+  "n_features_total": 4096,
+  "n_features_live": 4096,
+  "n_features_evaluated": 100,
+  "n_hits": 85,
+  "hit_rate_among_evaluated": 0.85,
+  "hit_rate_among_live": 0.020751953125,
+  "p_threshold": 0.01,
+  "top_k_tokens": 20,
+  "window_half_width": 15,
+  "n_shuffles": 200,
+  "n_motifs_scored": 879,
+  "per_feature": [
+    {
+      "feature_idx": 0,
+      "best_motif_id": "MA1961.2",
+      "best_motif_name": "PATZ1",
+      "best_score": 15.607116171878904,
+      "best_window": "CGCCGCTCGCAGGAGGCGGGGCCCAGGGGCG",
+      "p_value": 0.01990049751243781,
+      "hit": false
+    },
+    {
+      "feature_idx": 1,
+      "best_motif_id": "MA1653.2",
+      "best_motif_name": "ZNF148",
+      "best_score": 17.783795466560388,
+      "best_window": "CCCCCAATTCCCATCCTCATCCCCCTCCCCC",
+      "p_value": 0.11442786069651742,
+      "hit": false
+    },
+    {
+      "feature_idx": 2,
+      "best_motif_id": "MA1102.3",
+      "best_motif_name": "CTCFL",
+      "best_score": 14.81320112947882,
+      "best_window": "CCTAGTCCCAGCCCAGGGGGCCGCTCTCGCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 3,
+      "best_motif_id": "MA1643.2",
+      "best_motif_name": "NFIB",
+      "best_score": 19.986533340556495,
+      "best_window": "ACTGGCATCGTGCCCAGGGTGAGCTGTCAGC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 4,
+      "best_motif_id": "MA0107.1",
+      "best_motif_name": "RELA",
+      "best_score": 15.33469776224418,
+      "best_window": "CCCTTTGGGGGTTTCCCAGGGCTTTACACTC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 5,
+      "best_motif_id": "MA1643.2",
+      "best_motif_name": "NFIB",
+      "best_score": 19.986533340556495,
+      "best_window": "TCTGAACTGGCATCGTGCCCAGGGTGAGCTG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 6,
+      "best_motif_id": "MA0095.4",
+      "best_motif_name": "Yy1",
+      "best_score": 12.81323816922329,
+      "best_window": "AGAGCAGCTCAGGTGCCCAAGATGGACTCAG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 7,
+      "best_motif_id": "MA1721.2",
+      "best_motif_name": "ZNF93",
+      "best_score": 19.370257441278053,
+      "best_window": "TGAGCGCAGCGGCGGCAGCGGCGGCGCGGGA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 8,
+      "best_motif_id": "MA1976.2",
+      "best_motif_name": "ZNF320",
+      "best_score": 16.316955873640126,
+      "best_window": "CAGGAGGCGGGGCCCAGGGGCGGGTCGAGGG",
+      "p_value": 0.01990049751243781,
+      "hit": false
+    },
+    {
+      "feature_idx": 9,
+      "best_motif_id": "MA0741.1",
+      "best_motif_name": "KLF16",
+      "best_score": 16.61352647651221,
+      "best_window": "TGAGACCCCTTCATGCCCCGCCCCCTG",
+      "p_value": 0.009950248756218905,
+      "hit": true
+    },
+    {
+      "feature_idx": 10,
+      "best_motif_id": "MA1966.2",
+      "best_motif_name": "TFAP4::ETV1",
+      "best_score": 14.834391477783514,
+      "best_window": "GCGTGACCGGGTGCAGGTGGAGCGCGACGGG",
+      "p_value": 0.009950248756218905,
+      "hit": true
+    },
+    {
+      "feature_idx": 11,
+      "best_motif_id": "MA1573.2",
+      "best_motif_name": "Thap11",
+      "best_score": 19.470898761135825,
+      "best_window": "CTCCTGACTCCGGCGACTACATTTCCCACAG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 12,
+      "best_motif_id": "MA1487.3",
+      "best_motif_name": "FOXE1",
+      "best_score": 17.90753909093797,
+      "best_window": "ACTAAAAAAACAAAACATTAGCCGGGC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 13,
+      "best_motif_id": "MA1522.2",
+      "best_motif_name": "MAZ",
+      "best_score": 15.157958859102482,
+      "best_window": "CTCTTTCTGTTTCCCCCTCATCCCCCTCCCT",
+      "p_value": 0.12437810945273632,
+      "hit": false
+    },
+    {
+      "feature_idx": 14,
+      "best_motif_id": "MA1596.1",
+      "best_motif_name": "ZNF460",
+      "best_score": 18.482581131833967,
+      "best_window": "GCAGTTCTTCTGTCTCAGCCTCCTGAGTAGC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 15,
+      "best_motif_id": "MA0509.3",
+      "best_motif_name": "RFX1",
+      "best_score": 23.44188794190039,
+      "best_window": "CTCCTTTCGGTTGCCATAGCAACCCCATTCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 16,
+      "best_motif_id": "MA2125.1",
+      "best_motif_name": "Zfp809",
+      "best_score": 15.509769447285942,
+      "best_window": "AGAAATCCCAGCCTGGGTCCCCTTCGACCCA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 17,
+      "best_motif_id": "MA1966.2",
+      "best_motif_name": "TFAP4::ETV1",
+      "best_score": 14.834391477783514,
+      "best_window": "GCGAGCGTGACCGGGTGCAGGTGGAGCGCGA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 18,
+      "best_motif_id": "MA1101.3",
+      "best_motif_name": "BACH2",
+      "best_score": 18.908397357597615,
+      "best_window": "TGCATGACTCATCTCATTCTCTTCTGGGACA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 19,
+      "best_motif_id": "MA1721.2",
+      "best_motif_name": "ZNF93",
+      "best_score": 16.27924965121515,
+      "best_window": "GCGCGCTGGCGGCGGCGGAGGAAGGTGACAG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 20,
+      "best_motif_id": "MA1630.3",
+      "best_motif_name": "ZNF281",
+      "best_score": 18.86569460267626,
+      "best_window": "CAGCCACCGCCCCCCACCGGGGGGAGGGGGG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 21,
+      "best_motif_id": "MA1643.2",
+      "best_motif_name": "NFIB",
+      "best_score": 17.585200556480782,
+      "best_window": "TGCCAGCCAGGCATGGTGCCAGCTGTCTGCT",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 22,
+      "best_motif_id": "MA1513.2",
+      "best_motif_name": "KLF15",
+      "best_score": 13.430770746982482,
+      "best_window": "TTCGCGGCCCGCCCTCCTGACTCCGGCGACT",
+      "p_value": 0.029850746268656716,
+      "hit": false
+    },
+    {
+      "feature_idx": 23,
+      "best_motif_id": "MA0509.3",
+      "best_motif_name": "RFX1",
+      "best_score": 23.44188794190039,
+      "best_window": "CTCCTTTCGGTTGCCATAGCAACCCCATTCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 24,
+      "best_motif_id": "MA1647.3",
+      "best_motif_name": "Prdm4",
+      "best_score": 13.768709517518344,
+      "best_window": "AAAGCTTTTGCTTCTTGAAACTAGAAAAAGA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 25,
+      "best_motif_id": "MA0746.3",
+      "best_motif_name": "SP3",
+      "best_score": 18.491688075705532,
+      "best_window": "CCCCGCCACGCCCCTCGGCCACGCCCCCCTG",
+      "p_value": 0.009950248756218905,
+      "hit": true
+    },
+    {
+      "feature_idx": 26,
+      "best_motif_id": "MA1107.3",
+      "best_motif_name": "KLF9",
+      "best_score": 17.109658906246466,
+      "best_window": "TCTCACTCCCACACCCACCCTGGGA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 27,
+      "best_motif_id": "MA2328.1",
+      "best_motif_name": "ZBED4",
+      "best_score": 17.033969277596626,
+      "best_window": "CCCGCCCCGCCCCCCGAGGCCCCGCCCCGGC",
+      "p_value": 0.10945273631840796,
+      "hit": false
+    },
+    {
+      "feature_idx": 28,
+      "best_motif_id": "MA0050.4",
+      "best_motif_name": "Irf1",
+      "best_score": 16.011464268987794,
+      "best_window": "CTCTATAAAACTGAAACAAGGTAGGTAAAGT",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 29,
+      "best_motif_id": "MA0522.4",
+      "best_motif_name": "TCF3",
+      "best_score": 13.040458830212577,
+      "best_window": "GTTTCGCGCCGTTTAGCGACACCTGCGCGCG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 30,
+      "best_motif_id": "MA1959.2",
+      "best_motif_name": "KLF7",
+      "best_score": 14.518425845962291,
+      "best_window": "GTCCTTTGGAGGAGGGCGGGGCTAAAAGGGA",
+      "p_value": 0.009950248756218905,
+      "hit": true
+    },
+    {
+      "feature_idx": 31,
+      "best_motif_id": "MA1643.2",
+      "best_motif_name": "NFIB",
+      "best_score": 19.986533340556495,
+      "best_window": "ACTGGCATCGTGCCCAGGGTGAGCTGTCAGC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 32,
+      "best_motif_id": "MA0616.3",
+      "best_motif_name": "HES2",
+      "best_score": 15.214539106621187,
+      "best_window": "GGGGCTGGCACGTGCTGCGCCCGGTCCGCTG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 33,
+      "best_motif_id": "MA0516.3",
+      "best_motif_name": "SP2",
+      "best_score": 12.352559121283324,
+      "best_window": "AACCTTCTTCAACGACGAGGCGGGA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 34,
+      "best_motif_id": "MA0784.3",
+      "best_motif_name": "POU1F1",
+      "best_score": 17.765862571548336,
+      "best_window": "TTCTGGTTTCTTTTCTAATTTCCATATTTAC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 35,
+      "best_motif_id": "MA2097.1",
+      "best_motif_name": "ZNF75A",
+      "best_score": 15.64523088153567,
+      "best_window": "CCTATTGGTCTATTTTCCCACCCTTAGGC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 36,
+      "best_motif_id": "MA1630.3",
+      "best_motif_name": "ZNF281",
+      "best_score": 18.86569460267626,
+      "best_window": "GTGTCAGCGTCCGGGGCCGGGGGAGGGGGTG",
+      "p_value": 0.014925373134328358,
+      "hit": false
+    },
+    {
+      "feature_idx": 37,
+      "best_motif_id": "MA1630.3",
+      "best_motif_name": "ZNF281",
+      "best_score": 15.95880400706774,
+      "best_window": "CGTGGGGGTGGGGTCAGGGAAGAGGGCACAG",
+      "p_value": 0.04477611940298507,
+      "hit": false
+    },
+    {
+      "feature_idx": 38,
+      "best_motif_id": "MA1972.1",
+      "best_motif_name": "ZFP14",
+      "best_score": 15.019949583260349,
+      "best_window": "CTTCACGCCCAGAGGCCCCTGAAGGGAGGGA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 39,
+      "best_motif_id": "MA0813.1",
+      "best_motif_name": "TFAP2B",
+      "best_score": 14.95300770802136,
+      "best_window": "CCCGCGAGAAAGCCCCGAGGGCCGCGGCGGC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 40,
+      "best_motif_id": "MA1630.3",
+      "best_motif_name": "ZNF281",
+      "best_score": 18.86569460267626,
+      "best_window": "CAGCCACCGCCCCCCACCGGGGGGAGGGGGG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 41,
+      "best_motif_id": "MA1643.2",
+      "best_motif_name": "NFIB",
+      "best_score": 19.986533340556495,
+      "best_window": "TCTGAACTGGCATCGTGCCCAGGGTGAGCTG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 42,
+      "best_motif_id": "MA0813.1",
+      "best_motif_name": "TFAP2B",
+      "best_score": 14.95300770802136,
+      "best_window": "CCCGCGAGAAAGCCCCGAGGGCCGCGGCGGC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 43,
+      "best_motif_id": "MA1653.2",
+      "best_motif_name": "ZNF148",
+      "best_score": 17.783795466560388,
+      "best_window": "CCCGCGCCCCCGCGGCCGCCCCTCCCCCGCG",
+      "p_value": 0.029850746268656716,
+      "hit": false
+    },
+    {
+      "feature_idx": 44,
+      "best_motif_id": "MA0814.3",
+      "best_motif_name": "TFAP2C",
+      "best_score": 15.791497955353115,
+      "best_window": "CAGCCTTGCCCAGCCTGAGGCTCCCCTGACT",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 45,
+      "best_motif_id": "MA0814.3",
+      "best_motif_name": "TFAP2C",
+      "best_score": 15.791497955353115,
+      "best_window": "CCACAACTCTGGGCCTGAGGCCAGTTGCACT",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 46,
+      "best_motif_id": "MA1938.2",
+      "best_motif_name": "ERF::NHLH1",
+      "best_score": 16.05098223735437,
+      "best_window": "TTCTCCAGATAAGCAGCTCCGGGAAACAAAG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 47,
+      "best_motif_id": "MA0517.2",
+      "best_motif_name": "STAT1::STAT2",
+      "best_score": 12.287749121647403,
+      "best_window": "CCAGTTTCAGCTTTCTACATATGGCTAGCCA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 48,
+      "best_motif_id": "MA1114.2",
+      "best_motif_name": "PBX3",
+      "best_score": 15.732209681683413,
+      "best_window": "CCAAGTACTGAGTGGCAGGTACT",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 49,
+      "best_motif_id": "MA1972.1",
+      "best_motif_name": "ZFP14",
+      "best_score": 15.019949583260349,
+      "best_window": "CCTTCACGCCCAGAGGCCCCTGAAGGGAGGG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 50,
+      "best_motif_id": "MA1596.1",
+      "best_motif_name": "ZNF460",
+      "best_score": 22.237551280042183,
+      "best_window": "TCCTCCTCCGCCCCCTCCGCCTCCCGGGCCT",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 51,
+      "best_motif_id": "MA1721.2",
+      "best_motif_name": "ZNF93",
+      "best_score": 19.526590383108925,
+      "best_window": "GGCGGCGGCGGCGGCGGCGGTCATGGAACGC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 52,
+      "best_motif_id": "MA1961.2",
+      "best_motif_name": "PATZ1",
+      "best_score": 15.607116171878904,
+      "best_window": "CCCGCCTCCGCCGCTCGCAGGAGGCGGGGCC",
+      "p_value": 0.009950248756218905,
+      "hit": true
+    },
+    {
+      "feature_idx": 53,
+      "best_motif_id": "MA1141.2",
+      "best_motif_name": "FOS::JUND",
+      "best_score": 14.76746849536544,
+      "best_window": "GGTGAGTCATGTCCCCAGTGGGTCTGTCCAA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 54,
+      "best_motif_id": "MA0759.3",
+      "best_motif_name": "ELK3",
+      "best_score": 15.159766597873313,
+      "best_window": "GGCGGAGCCGTTGGCTGCGGACGCCGGAAGT",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 55,
+      "best_motif_id": "MA0494.2",
+      "best_motif_name": "Nr1h3::Rxra",
+      "best_score": 13.500619780173507,
+      "best_window": "CGGTTGCTTTCGCTGCCCTCAAGAGAACTCA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 56,
+      "best_motif_id": "MA0742.2",
+      "best_motif_name": "KLF12",
+      "best_score": 16.680625793896855,
+      "best_window": "CGGAACGGGGCGGGGCAGGGACACCACCTGG",
+      "p_value": 0.009950248756218905,
+      "hit": true
+    },
+    {
+      "feature_idx": 57,
+      "best_motif_id": "MA0742.2",
+      "best_motif_name": "KLF12",
+      "best_score": 16.680625793896855,
+      "best_window": "CGGAGGCGGGGCGGGGAGGGGCCGGCGGCGG",
+      "p_value": 0.2935323383084577,
+      "hit": false
+    },
+    {
+      "feature_idx": 58,
+      "best_motif_id": "MA0140.3",
+      "best_motif_name": "GATA1::TAL1",
+      "best_score": 14.654957713618776,
+      "best_window": "CAGCCTGGCTGTGCTATCTGCCACCCCCAGC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 59,
+      "best_motif_id": "MA1721.2",
+      "best_motif_name": "ZNF93",
+      "best_score": 19.526590383108925,
+      "best_window": "GACGGCGGCGGCGGCGGCATGCGGCTCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 60,
+      "best_motif_id": "MA0741.1",
+      "best_motif_name": "KLF16",
+      "best_score": 16.61352647651221,
+      "best_window": "CCCTTCATGCCCCGCCCCCTGGGTCCCTCAA",
+      "p_value": 0.014925373134328358,
+      "hit": false
+    },
+    {
+      "feature_idx": 61,
+      "best_motif_id": "MA1630.3",
+      "best_motif_name": "ZNF281",
+      "best_score": 18.86569460267626,
+      "best_window": "GTGGGTGACACGTCCTGGGGGAGGGGTAGCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 62,
+      "best_motif_id": "MA0872.1",
+      "best_motif_name": "TFAP2A",
+      "best_score": 16.211424955347184,
+      "best_window": "ATGGCCCCGAGGGCACCGGGGCT",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 63,
+      "best_motif_id": "MA0137.4",
+      "best_motif_name": "STAT1",
+      "best_score": 15.709165081049628,
+      "best_window": "GATTCATTTCCAGGAAGGTGCTTGGGTCAAT",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 64,
+      "best_motif_id": "MA1573.2",
+      "best_motif_name": "Thap11",
+      "best_score": 19.470898761135825,
+      "best_window": "TGACTCCGGCGACTACATTTCCCACAGGACG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 65,
+      "best_motif_id": "MA1961.2",
+      "best_motif_name": "PATZ1",
+      "best_score": 17.921556690615542,
+      "best_window": "CGGGGGCGGGGGGCCAGCCGTCTGGGAGCCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 66,
+      "best_motif_id": "MA0136.4",
+      "best_motif_name": "Elf5",
+      "best_score": 14.457541517805947,
+      "best_window": "GTGGAGGCTGGCCTAAACAAGGAAGTCATGG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 67,
+      "best_motif_id": "MA1627.2",
+      "best_motif_name": "Wt1",
+      "best_score": 14.737185555224878,
+      "best_window": "CAGGAGCGGCTGCCGGCTCCCCCACTCCTGG",
+      "p_value": 0.009950248756218905,
+      "hit": true
+    },
+    {
+      "feature_idx": 68,
+      "best_motif_id": "MA1112.3",
+      "best_motif_name": "NR4A1",
+      "best_score": 14.898280639337823,
+      "best_window": "AGTGCCTAAAGGTCATAATTGTGACCCTTGT",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 69,
+      "best_motif_id": "MA2328.1",
+      "best_motif_name": "ZBED4",
+      "best_score": 17.033969277596626,
+      "best_window": "CCCGCCGGCCCCGCCCCCGCCCCGCCCCCCG",
+      "p_value": 0.11442786069651742,
+      "hit": false
+    },
+    {
+      "feature_idx": 70,
+      "best_motif_id": "MA1628.2",
+      "best_motif_name": "Zic1::Zic2",
+      "best_score": 13.43758722427449,
+      "best_window": "AAGAAAAGCTGAAGGCCAGCAGGCAACGAAA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 71,
+      "best_motif_id": "MA0599.1",
+      "best_motif_name": "KLF5",
+      "best_score": 15.095773825428555,
+      "best_window": "CCTGCGCGACGCTGCCCCGCCCTGCGCCCGC",
+      "p_value": 0.024875621890547265,
+      "hit": false
+    },
+    {
+      "feature_idx": 72,
+      "best_motif_id": "MA1107.3",
+      "best_motif_name": "KLF9",
+      "best_score": 17.109658906246466,
+      "best_window": "TCTCACTCCCACACCCACCCTGGGATA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 73,
+      "best_motif_id": "MA1599.2",
+      "best_motif_name": "ZNF682",
+      "best_score": 15.730925110519552,
+      "best_window": "AAGGCTTCCTGCGACAGTATGGGTAAGCCCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 74,
+      "best_motif_id": "MA0062.4",
+      "best_motif_name": "GABPA",
+      "best_score": 17.187270868946232,
+      "best_window": "GATCCACCTCCACTTCCTGTTTCCGCAGCCG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 75,
+      "best_motif_id": "MA0830.3",
+      "best_motif_name": "TCF4",
+      "best_score": 14.144011420018447,
+      "best_window": "GGCGTACTGGCCTGGTCCAGCACCTGCGGGG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 76,
+      "best_motif_id": "MA1630.3",
+      "best_motif_name": "ZNF281",
+      "best_score": 18.86569460267626,
+      "best_window": "GGTGACACGTCCTGGGGGAGGGGTAGCCGGG",
+      "p_value": 0.009950248756218905,
+      "hit": true
+    },
+    {
+      "feature_idx": 77,
+      "best_motif_id": "MA1723.2",
+      "best_motif_name": "PRDM9",
+      "best_score": 16.27108637423258,
+      "best_window": "CACCTGGGGGAGCAGAGGGAGCAGCACCTGC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 78,
+      "best_motif_id": "MA1653.2",
+      "best_motif_name": "ZNF148",
+      "best_score": 17.783795466560388,
+      "best_window": "GCCCGCGCCCCCGCGGCCGCCCCTCCCCCGC",
+      "p_value": 0.014925373134328358,
+      "hit": false
+    },
+    {
+      "feature_idx": 79,
+      "best_motif_id": "MA1721.2",
+      "best_motif_name": "ZNF93",
+      "best_score": 19.526590383108925,
+      "best_window": "GGCGGCGGCGGCGGCGGCGCCCCGACTGCAG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 80,
+      "best_motif_id": "MA0741.1",
+      "best_motif_name": "KLF16",
+      "best_score": 16.61352647651221,
+      "best_window": "TGAGACCCCTTCATGCCCCGCCCCCTG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 81,
+      "best_motif_id": "MA0156.4",
+      "best_motif_name": "FEV",
+      "best_score": 16.850423880608666,
+      "best_window": "ACGGACCGGAAGTTCCGCAGCCGCGCCGTCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 82,
+      "best_motif_id": "MA1972.1",
+      "best_motif_name": "ZFP14",
+      "best_score": 15.85220479072783,
+      "best_window": "GGCCTGGTCCTGAGGAGGGCTTGGAGCGGGC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 83,
+      "best_motif_id": "MA0140.3",
+      "best_motif_name": "GATA1::TAL1",
+      "best_score": 15.15314574908992,
+      "best_window": "GCTGATCTCAAGTTATCTGCCTGCCTCAGCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 84,
+      "best_motif_id": "MA1652.2",
+      "best_motif_name": "ZKSCAN5",
+      "best_score": 15.956950314522949,
+      "best_window": "GTGCTGGAGAGGACTGGAAGGAGGTGAGGAA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 85,
+      "best_motif_id": "MA0471.3",
+      "best_motif_name": "E2F6",
+      "best_score": 14.677212985567843,
+      "best_window": "TCCCATCTCTGGCGGGAAGCGCTCCCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 86,
+      "best_motif_id": "MA1961.2",
+      "best_motif_name": "PATZ1",
+      "best_score": 15.430172382280531,
+      "best_window": "AGCACCGGGACAAAGGCCGGGCGGGGGCCGG",
+      "p_value": 0.014925373134328358,
+      "hit": false
+    },
+    {
+      "feature_idx": 87,
+      "best_motif_id": "MA2123.1",
+      "best_motif_name": "Hand1",
+      "best_score": 13.615535314779825,
+      "best_window": "AGACCAGACCTGTTTAGCATCAGTAGGACTT",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 88,
+      "best_motif_id": "MA1721.2",
+      "best_motif_name": "ZNF93",
+      "best_score": 19.526590383108925,
+      "best_window": "CGGACGGCGGCGGCGGCGGCATGCGGCTCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 89,
+      "best_motif_id": "MA0144.3",
+      "best_motif_name": "STAT3",
+      "best_score": 15.32900310281898,
+      "best_window": "TCCAGCTAGCTCCTTCTGGGAA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 90,
+      "best_motif_id": "MA1709.2",
+      "best_motif_name": "ZIM3",
+      "best_score": 17.315828443480445,
+      "best_window": "ACAACAGAAAACTACACATCCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 91,
+      "best_motif_id": "MA1966.2",
+      "best_motif_name": "TFAP4::ETV1",
+      "best_score": 14.834391477783514,
+      "best_window": "CCGCGAGCGTGACCGGGTGCAGGTGGAGCGC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 92,
+      "best_motif_id": "MA1721.2",
+      "best_motif_name": "ZNF93",
+      "best_score": 19.526590383108925,
+      "best_window": "GGCGGCGGCGGCGGCATGCGGCTCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 93,
+      "best_motif_id": "MA0746.3",
+      "best_motif_name": "SP3",
+      "best_score": 16.636904586466564,
+      "best_window": "CTGCGGCAGGCCCCGCCCACACAGGCTCCGC",
+      "p_value": 0.009950248756218905,
+      "hit": true
+    },
+    {
+      "feature_idx": 94,
+      "best_motif_id": "MA1514.2",
+      "best_motif_name": "KLF17",
+      "best_score": 16.04969213675528,
+      "best_window": "AAACCTCGCGCCCCTCCGCACTCCTCA",
+      "p_value": 0.009950248756218905,
+      "hit": true
+    },
+    {
+      "feature_idx": 95,
+      "best_motif_id": "MA1653.2",
+      "best_motif_name": "ZNF148",
+      "best_score": 15.998576789508089,
+      "best_window": "GCCCCTCCCCGCGCGTCACATGCGCGAGGAT",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 96,
+      "best_motif_id": "MA0504.2",
+      "best_motif_name": "NR2C2",
+      "best_score": 17.25255412738151,
+      "best_window": "GAGTGCGCAGGTCAGAGGGCGGCGCGCAGCG",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 97,
+      "best_motif_id": "MA1107.3",
+      "best_motif_name": "KLF9",
+      "best_score": 16.948007763618786,
+      "best_window": "GCCTGCACCGAGGCCACACCCCCTCGCCTTA",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 98,
+      "best_motif_id": "MA1630.3",
+      "best_motif_name": "ZNF281",
+      "best_score": 18.86569460267626,
+      "best_window": "GTGGGTGACACGTCCTGGGGGAGGGGTAGCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    },
+    {
+      "feature_idx": 99,
+      "best_motif_id": "MA1516.2",
+      "best_motif_name": "KLF3",
+      "best_score": 16.79825754564106,
+      "best_window": "TTCTCCCCCGCCACGCCCCTCGGCCACGCCC",
+      "p_value": 0.004975124378109453,
+      "hit": true
+    }
+  ],
+  "wall_time_s": 105.70898389816284,
+  "sae_ckpt": "/srv/hgao0864/Bio/bio_fm_probing/results/evo_1_8k__genomic_benchmarks_delta/layer_16_hyena/sae.pt",
+  "acts_cache": "/srv/hgao0864/Bio/bio_fm_probing/results/evo_1_8k__genomic_benchmarks_delta/layer_16_hyena/token_activations.npz",
+  "jaspar_path": "/srv/hgao0864/Bio/bio_fm_probing/data/jaspar/JASPAR2024_CORE_vertebrates.meme"
+}

@@ -9,15 +9,14 @@ __pycache__/
 checkpoints/
 data/
 
-# Large NPZ caches (embeddings) — regeneratable
-results/*.npz
-results/*.npy
-results/**/*.npz
-results/**/*.npy
-# Trained model checkpoints in results/ — regeneratable from caches
-results/**/*.pt
-results/**/*.bin
-results/**/*.safetensors
+# Large NPZ caches (embeddings) — regeneratable. Match anywhere in the tree
+# (covers results/, legacy/results/, etc).
+*.npz
+*.npy
+# Trained model checkpoints — regeneratable from caches
+*.pt
+*.bin
+*.safetensors
 
 # Local-only
 .env

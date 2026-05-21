@@ -1,0 +1,43 @@
+{
+  "baseline_kind": "log1p_pca",
+  "info": {
+    "kind": "log1p_pca",
+    "n_components": 50,
+    "evr_sum": 0.12129717320203781,
+    "n_genes": 12300
+  },
+  "probe": {
+    "accuracy_mean": 0.9348484848484848,
+    "accuracy_std": 0.006078335809045941,
+    "macro_f1_mean": 0.9005647868054616,
+    "macro_f1_std": 0.04273392946562088,
+    "n_seeds": 5,
+    "per_seed": [
+      {
+        "seed_idx": 0,
+        "accuracy": 0.9356060606060606,
+        "macro_f1": 0.926377950946284
+      },
+      {
+        "seed_idx": 1,
+        "accuracy": 0.9393939393939394,
+        "macro_f1": 0.9308442681496887
+      },
+      {
+        "seed_idx": 2,
+        "accuracy": 0.9375,
+        "macro_f1": 0.8892137342316995
+      },
+      {
+        "seed_idx": 3,
+        "accuracy": 0.9242424242424242,
+        "macro_f1": 0.8302782465164902
+      },
+      {
+        "seed_idx": 4,
+        "accuracy": 0.9375,
+        "macro_f1": 0.9261097341831466
+      }
+    ]
+  }
+}

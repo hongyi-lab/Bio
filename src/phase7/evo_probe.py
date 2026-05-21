@@ -75,7 +75,12 @@ from common_sae import (  # noqa: E402
 MAX_LEN_DEFAULT = 512
 
 
-def load_evo2(model_dir: str, device: str = "cuda", fp16: bool = True):
+def load_evo2(model_dir: str, device: str = "cuda", fp16: bool = True,
+              dtype: str = "bf16"):
+    """dtype overrides fp16 when set. Allowed values: 'fp16', 'bf16', 'fp32'.
+    Default bf16 — fp16 explodes to NaN in StripedHyena's deep Hyena filters,
+    bf16 has fp32-equivalent exponent range with the same 2 bytes/param.
+    """
     """Load Evo-2 from HF or local dir. Returns (model, tokenizer, d_model, n_layers,
     blocks_attr_path).
 
@@ -84,7 +89,11 @@ def load_evo2(model_dir: str, device: str = "cuda", fp16: bool = True):
     """
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    print(f"[evo] loading {model_dir} (fp16={fp16})")
+    dtype_map = {"fp16": torch.float16, "bf16": torch.bfloat16, "fp32": torch.float32}
+    if dtype not in dtype_map:
+        raise ValueError(f"dtype must be one of {list(dtype_map)}, got {dtype!r}")
+    torch_dtype = dtype_map[dtype]
+    print(f"[evo] loading {model_dir} (dtype={dtype})")
     tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
     # Evo-1's ByteTokenizer has no special tokens defined (vocab is raw bytes,
     # DNA chars sit at A=65, C=67, G=71, T=84). Pick byte 0 as pad — it never
@@ -95,7 +104,7 @@ def load_evo2(model_dir: str, device: str = "cuda", fp16: bool = True):
     # LM head is unused — we only need backbone activations via hooks.
     model = AutoModelForCausalLM.from_pretrained(
         model_dir, trust_remote_code=True,
-        torch_dtype=torch.float16 if fp16 else torch.float32,
+        torch_dtype=torch_dtype,
     )
     model.to(device).eval()
 
@@ -242,7 +251,11 @@ def main() -> int:
     p.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4])
     p.add_argument("--ablation_K_grid", type=int, nargs="+",
                    default=[1, 2, 4, 8, 16, 32, 64, 128, 256])
-    p.add_argument("--no_fp16", action="store_true")
+    p.add_argument("--no_fp16", action="store_true",
+                   help="legacy: forces fp32 (slow, big). Prefer --dtype.")
+    p.add_argument("--dtype", default="bf16", choices=["fp16", "bf16", "fp32"],
+                   help="default bf16: fp16 NaNs at deep layers in StripedHyena; "
+                        "bf16 same memory + fp32-equivalent range; fp32 is slow.")
     p.add_argument("--force", action="store_true",
                    help="ignore caches and re-extract / re-train SAE")
     p.add_argument("--device",
@@ -275,7 +288,8 @@ def main() -> int:
 
     # Load model
     model, tok, d_model, n_layers, blocks_attr = load_evo2(
-        _resolve(args.model_dir), device=args.device, fp16=not args.no_fp16,
+        _resolve(args.model_dir), device=args.device,
+        dtype=("fp32" if args.no_fp16 else args.dtype),
     )
 
     # Tokenize once for whole dataset

@@ -1,0 +1,32 @@
+{
+  "epoch_loss": [
+    125.86737340291342
+  ],
+  "epoch_var_explained": [
+    0.15613218444836163
+  ],
+  "epoch_dead_features": [
+    0
+  ],
+  "epoch_l0_mean": [
+    31.98203125
+  ],
+  "epoch_time_s": [
+    1.7537124156951904
+  ],
+  "resample_events": [],
+  "config": {
+    "d_in": 4096,
+    "n_features": 4096,
+    "k": 32,
+    "epochs": 1,
+    "batch_size": 4096,
+    "lr": 0.001,
+    "n_tokens": 125500,
+    "resample_every": 0,
+    "resample_buffer_size": 16384
+  },
+  "dead_features_ever": 0,
+  "total_resample_events": 0,
+  "total_features_resampled": 0
+}

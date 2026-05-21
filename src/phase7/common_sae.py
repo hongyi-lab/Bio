@@ -232,11 +232,99 @@ class TopKSAE(nn.Module):
         self.W_dec.data /= norms
 
 
+@torch.no_grad()
+def _resample_dead_features(
+    sae: TopKSAE, opt: torch.optim.Optimizer,
+    act_buffer: torch.Tensor, dead_mask: torch.Tensor,
+) -> int:
+    """Anthropic-style dead-feature resampling (Bricken et al. 2024).
+
+    For every feature that did not activate during the recent window:
+      - Sample an input from `act_buffer` weighted by its current reconstruction
+        error magnitude (so we reinit toward inputs the SAE handles worst).
+      - Set the decoder row to the L2-normalized error direction of that input.
+      - Set the encoder column to 0.2 * mean(alive_encoder_column_norm) along
+        the same direction.
+      - Reset the encoder bias to 0.
+      - Zero out the corresponding Adam moments so the resampled features start
+        from a clean optimizer state.
+
+    Without this, a feature that loses the TopK competition early stays dead
+    forever (gradient through ReLU + TopK gate is zero). On the small-dict-on-
+    low-rank-data case (Evo-1 layer_00_input, DNA 4-letter alphabet, dict=16k),
+    99% of features ended up dead — that's a training bug, not the model's fault.
+    Resampling rescues those features by giving them a fresh chance every
+    `resample_every` steps.
+
+    Returns: number of features resampled.
+    """
+    n_dead = int(dead_mask.sum().item())
+    if n_dead == 0:
+        return 0
+
+    # Reconstruction errors on the buffer (centered for numerical stability)
+    x_recon, _ = sae(act_buffer)
+    errors = act_buffer - x_recon                                   # (M, d_in)
+    error_norms_sq = (errors ** 2).sum(dim=-1)
+    if float(error_norms_sq.sum().item()) <= 0:
+        return 0
+    probs = error_norms_sq / error_norms_sq.sum()
+
+    # Sample n_dead error directions (with replacement — fine if n_dead > M)
+    sampled = torch.multinomial(probs, n_dead, replacement=True)
+    new_dirs = errors[sampled]                                       # (n_dead, d_in)
+    new_dirs = new_dirs / new_dirs.norm(dim=-1, keepdim=True).clamp(min=1e-8)
+
+    # Encoder scale: 0.2 * mean alive encoder column norm (Anthropic recipe).
+    alive_mask = ~dead_mask
+    if alive_mask.any():
+        alive_enc_norms = sae.W_enc.data[:, alive_mask].norm(dim=0)
+        enc_scale = 0.2 * alive_enc_norms.mean().item()
+    else:
+        enc_scale = 0.2
+
+    dead_idx = torch.where(dead_mask)[0]
+    # W_dec shape (n_features, d_in) — decoder rows = new directions
+    sae.W_dec.data[dead_idx] = new_dirs
+    # W_enc shape (d_in, n_features) — encoder columns = scaled new directions
+    sae.W_enc.data[:, dead_idx] = (new_dirs * enc_scale).T
+    sae.b_enc.data[dead_idx] = 0.0
+
+    # Zero out Adam moments for the resampled slices so the new directions
+    # start with a clean optimizer state. Skipping this leaves stale momentum
+    # that yanks the freshly-initialized features straight back toward zero.
+    for p in (sae.W_dec, sae.W_enc, sae.b_enc):
+        st = opt.state.get(p)
+        if not st or "exp_avg" not in st:
+            continue
+        if p is sae.W_dec:
+            st["exp_avg"][dead_idx] = 0.0
+            st["exp_avg_sq"][dead_idx] = 0.0
+        elif p is sae.W_enc:
+            st["exp_avg"][:, dead_idx] = 0.0
+            st["exp_avg_sq"][:, dead_idx] = 0.0
+        elif p is sae.b_enc:
+            st["exp_avg"][dead_idx] = 0.0
+            st["exp_avg_sq"][dead_idx] = 0.0
+
+    return n_dead
+
+
 def train_topk_sae(
     activations: np.ndarray, d_in: int, n_features: int, k: int,
     batch_size: int, epochs: int, lr: float, device: str,
+    resample_every: int = 6000,
+    resample_buffer_size: int = 16384,
 ) -> Tuple[TopKSAE, dict]:
-    """Train TopK SAE on a flat (N_tokens, d_in) activation buffer."""
+    """Train TopK SAE on a flat (N_tokens, d_in) activation buffer.
+
+    resample_every: dead-feature resampling cadence in optimizer steps.
+        Default 6000 (~3 events in a 20-epoch / ~24000-step run). Set to 0
+        to disable.
+    resample_buffer_size: how many tokens to sample for error-weighted
+        resampling. Higher = more representative error distribution but more
+        GPU memory.
+    """
     sae = TopKSAE(d_in, n_features, k).to(device)
     sae.normalize_decoder()
     opt = torch.optim.Adam(sae.parameters(), lr=lr)
@@ -245,16 +333,23 @@ def train_topk_sae(
     n_batches = n_tokens // batch_size
     var_total = float(act_t.var().item())
     print(f"[sae] training: {n_tokens} tokens, {n_batches} batches/epoch, "
-          f"dict={n_features}, k={k}, epochs={epochs}, bs={batch_size}")
+          f"dict={n_features}, k={k}, epochs={epochs}, bs={batch_size}, "
+          f"resample_every={resample_every}")
 
     log: Dict[str, list] = {
         "epoch_loss": [], "epoch_var_explained": [],
         "epoch_dead_features": [], "epoch_l0_mean": [], "epoch_time_s": [],
+        "resample_events": [],   # list of {step, epoch, n_resampled}
         "config": {"d_in": d_in, "n_features": n_features, "k": k,
                    "epochs": epochs, "batch_size": batch_size, "lr": lr,
-                   "n_tokens": int(n_tokens)},
+                   "n_tokens": int(n_tokens),
+                   "resample_every": resample_every,
+                   "resample_buffer_size": resample_buffer_size},
     }
     ever_active = torch.zeros(n_features, dtype=torch.bool, device=device)
+    # Per-resampling-window activity tracker, reset at every resample event.
+    window_active = torch.zeros(n_features, dtype=torch.bool, device=device)
+    global_step = 0
 
     from tqdm import tqdm as _tqdm
     epoch_bar = _tqdm(range(epochs), desc="[sae] train", unit="epoch")
@@ -277,8 +372,37 @@ def train_topk_sae(
             with torch.no_grad():
                 a = (z > 0).any(dim=0)
                 active_this |= a
+                window_active |= a
                 ever_active |= a
                 l0s.append(float((z > 0).float().sum(dim=-1).mean().item()))
+
+            global_step += 1
+            # Resampling event — flush after a full window of training so we
+            # have a stable activity signal. Skip the very last step.
+            if (resample_every > 0
+                    and global_step % resample_every == 0
+                    and (epoch * n_batches + b + 1) < epochs * n_batches):
+                with torch.no_grad():
+                    dead_mask = ~window_active
+                    n_dead = int(dead_mask.sum().item())
+                    if n_dead > 0:
+                        buf_n = min(resample_buffer_size, n_tokens)
+                        buf_idx = torch.randint(0, n_tokens, (buf_n,))
+                        buf = act_t[buf_idx].to(device, non_blocking=True)
+                        n_resampled = _resample_dead_features(
+                            sae, opt, buf, dead_mask
+                        )
+                        sae.normalize_decoder()
+                        log["resample_events"].append({
+                            "step": global_step,
+                            "epoch": epoch + 1,
+                            "n_dead_in_window": n_dead,
+                            "n_resampled": n_resampled,
+                        })
+                        print(f"[sae]   resample @ step {global_step}: "
+                              f"{n_resampled} features reinitialized")
+                    window_active.zero_()
+
         log["epoch_loss"].append(float(np.mean(losses)))
         log["epoch_var_explained"].append(
             1.0 - log["epoch_loss"][-1] / max(var_total, 1e-12)
@@ -293,6 +417,10 @@ def train_topk_sae(
               f"dt={log['epoch_time_s'][-1]:.1f}s")
 
     log["dead_features_ever"] = int(n_features - ever_active.sum().item())
+    log["total_resample_events"] = len(log["resample_events"])
+    log["total_features_resampled"] = sum(
+        e["n_resampled"] for e in log["resample_events"]
+    )
     return sae, log
 
 
@@ -555,10 +683,21 @@ def extract_tokens_from_iter(
             torch.arange(cells_processed, cells_processed + B, device=x.device)
             .unsqueeze(1).expand_as(valid)
         )
-        # Store as fp16 — activations came from an fp16 forward pass, so this is the
-        # original precision (no info loss). All consumers (train_topk_sae,
-        # encode_batched, svd_spectrum_diagnostic, PCA) promote to fp32/fp64 on load.
-        acts_chunks.append(x[valid].cpu().numpy().astype(np.float16))
+        # Disk-cache dtype is dictated by the source tensor:
+        #   fp16 source -> fp16 cache (no loss, half disk)
+        #   bf16 source -> fp32 cache (bf16 has fp32 range; fp16 cast would
+        #                              overflow to +/-Inf on deep StripedHyena
+        #                              outputs and corrupt all of layer's activations)
+        #   fp32 source -> fp32 cache (no cast)
+        # numpy has no native bf16 dtype, so bf16 must be widened.
+        x_cpu = x[valid].cpu()
+        if x_cpu.dtype == torch.bfloat16:
+            arr = x_cpu.float().numpy()                  # fp32, safe
+        elif x_cpu.dtype == torch.float16:
+            arr = x_cpu.numpy().astype(np.float16)       # already fp16, idempotent
+        else:
+            arr = x_cpu.numpy().astype(np.float32)       # fp32 source
+        acts_chunks.append(arr)
         cell_chunks.append(cell_idx_full[valid].cpu().numpy().astype(np.int64))
         cells_processed += B
     return (

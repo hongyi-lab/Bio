@@ -1,0 +1,39 @@
+{
+  "layer": "layer_12",
+  "n_features": 2048,
+  "k_active_per_token": 32,
+  "results": {
+    "accuracy_mean": 0.8390151515151516,
+    "accuracy_std": 0.013852972384780091,
+    "macro_f1_mean": 0.636629732880119,
+    "macro_f1_std": 0.05435982294066849,
+    "n_seeds": 5,
+    "per_seed": [
+      {
+        "seed_idx": 0,
+        "accuracy": 0.8333333333333334,
+        "macro_f1": 0.6696868311463837
+      },
+      {
+        "seed_idx": 1,
+        "accuracy": 0.8409090909090909,
+        "macro_f1": 0.6157280292892189
+      },
+      {
+        "seed_idx": 2,
+        "accuracy": 0.8579545454545454,
+        "macro_f1": 0.711869949129077
+      },
+      {
+        "seed_idx": 3,
+        "accuracy": 0.8200757575757576,
+        "macro_f1": 0.6130592955540086
+      },
+      {
+        "seed_idx": 4,
+        "accuracy": 0.8428030303030303,
+        "macro_f1": 0.5728045592819068
+      }
+    ]
+  }
+}

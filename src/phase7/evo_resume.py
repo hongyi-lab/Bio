@@ -149,7 +149,10 @@ def main() -> int:
     p.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4])
     p.add_argument("--ablation_K_grid", type=int, nargs="+",
                    default=[1, 2, 4, 8, 16, 32, 64, 128, 256])
-    p.add_argument("--no_fp16", action="store_true")
+    p.add_argument("--no_fp16", action="store_true",
+                   help="legacy: forces fp32. Prefer --dtype.")
+    p.add_argument("--dtype", default="bf16", choices=["fp16", "bf16", "fp32"],
+                   help="default bf16 — fp16 NaNs at deep StripedHyena layers")
     p.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     p.add_argument("--out", default=None)
     args = p.parse_args()
@@ -215,7 +218,8 @@ def main() -> int:
             if model is None:
                 print(f"[resume] loading {args.model_dir}")
                 model, tok, d_model_real, n_layers_real, blocks_attr = load_evo2(
-                    _resolve(args.model_dir), device=args.device, fp16=not args.no_fp16,
+                    _resolve(args.model_dir), device=args.device,
+                    dtype=("fp32" if args.no_fp16 else args.dtype),
                 )
                 # If discovered values differ, refresh derived knobs
                 if d_model_real != d_model:
@@ -345,33 +349,49 @@ def main() -> int:
             )
             ablation_json.write_text(json.dumps(ablation, indent=2))
 
-        pca_summary[layer] = pca_probe
+        # Build per-layer summary in the same shape evo_probe.py uses, so the
+        # downstream plot_phase7_summary / write_phase7_report helpers work.
         sae_summary[layer] = {
-            "training_log": train_log,
-            "cell_type_probe": sae_probe,
+            "d_model": int(d_model),
+            "n_tokens": int(token_acts.shape[0]),
+            "var_explained_final": train_log["epoch_var_explained"][-1],
+            "dead_features_ever": train_log["dead_features_ever"],
+            "pca_probe": pca_probe,
+            "sae_probe": sae_probe,
+            "k99": svd_results[layer].get("k99"),
+            **extract_summary_fields(ablation),
         }
-        ablation_summary[layer] = ablation
 
         # Free memory between layers
         del token_acts, X_pca_cell, X_sae_cell, sae
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-    # ---- 8. Report + plot ----
+    # ---- 8. Cross-layer outputs (phase 7.1 protocol-aligned helpers) ----
     (out_dir / "svd_diag.json").write_text(json.dumps(svd_results, indent=2))
-    summary = extract_summary_fields(
-        recipe="evo_1_8k__genomic_benchmarks", n_cells=n_cells,
-        d_model=d_model, n_layers=n_layers,
-        layer_names=sae_layers, svd=svd_results,
-        pca_probe=pca_summary, sae_summary=sae_summary,
-        ablation=ablation_summary,
+    (out_dir / "phase7_summary.json").write_text(
+        json.dumps({
+            "model": "evo_1_8k", "dataset": "genomic_benchmarks",
+            "d_model": int(d_model), "n_layers_total": int(n_layers),
+            "sae_layers_probed": sae_layers,
+            "sae_dict": int(sae_dict), "sae_k": args.sae_k,
+            "sae_expansion": args.sae_expansion,
+            "pca_dim": int(pca_dim),
+            "seeds": args.seeds,
+            "n_samples": n_cells,
+            "per_layer": sae_summary,
+        }, indent=2)
     )
-    (out_dir / "phase7_summary.json").write_text(json.dumps(summary, indent=2))
-    write_phase7_report(out_dir / "REPORT.md", summary)
     try:
-        plot_phase7_summary(out_dir / "phase7_summary.png", summary)
+        plot_phase7_summary(out_dir, sae_layers, sae_summary,
+                            model_name="Evo-1 7B",
+                            dataset_name="genomic_benchmarks")
     except Exception as e:
         print(f"[resume] WARN: plot failed ({e}); JSON+REPORT.md still written")
+    write_phase7_report(out_dir, "evo_1_8k", "genomic_benchmarks",
+                        d_model, n_layers, sae_layers, sae_dict, args.sae_k,
+                        args.sae_expansion, pca_dim, args.seeds, n_cells,
+                        sae_summary, svd_results)
     print(f"\n[resume] DONE — see {out_dir}/REPORT.md")
     return 0
 
